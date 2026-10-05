@@ -1,0 +1,72 @@
+# Fuentes, capturas y outputs; no elimina archivos locales.
+/data_a/
+/data_b/
+/data_c/
+/data_analytics/
+/inputs/
+/analisis/resultados/
+/archivo_obsoleto/
+/docs/validacion.json
+
+# Datasets y maestros de datos. El catálogo A es configuración del código.
+*.csv
+!/config/catalogo_base_a.csv
+*.tsv
+*.xls
+*.xlsx
+*.parquet
+*.feather
+*.arrow
+*.h5
+*.hdf5
+*.sqlite
+*.sqlite3
+*.db
+
+# Bundles históricos y artefactos de modelos.
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+*.pkl
+*.pickle
+*.joblib
+
+# Entornos y archivos generados por Python.
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+build/
+dist/
+*.egg-info/
+
+# Secretos y configuración local; conservar plantillas sin credenciales.
+.env
+.env.*
+!.env.example
+!.env.sample
+.vscode/
+.idea/
+
+# Temporales y archivos del sistema.
+*.log
+*.tmp
+*.bak
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Se conservan scripts, documentación, notebooks explicativos y contratos JSON.
+# Gitignore no puede excluir únicamente las salidas incrustadas en un notebook.
