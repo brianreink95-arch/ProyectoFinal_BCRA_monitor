@@ -747,9 +747,12 @@ def choose_operational_c(root, run_id=None):
         raise ValueError('No existe una corrida C válida para el maestro completo. ' + '; '.join(rejected))
     return sorted(candidates, key=lambda p: p.name)[-1]
 
-def transform_c(root, output, run_id=None):
+def transform_c(root, output, run_id=None, ipc=None):
     """Dimensiones y hechos de deuda para IEF; no exportar matrices ni transiciones de EDA."""
     from lib.relacional import exportar_tablas, id_estable, fecha_iso, booleanos
+    from lib.precios import cargar_ipc, ajustar_montos, resumen_ajuste
+    if ipc is None:
+        ipc, _ = cargar_ipc(root)
     selected = choose_operational_c(root,run_id)
     run,master,links,coverage,long,active,panel = load_c(root,selected.name)
     require_unique(panel,['cuit_normalizado','fecha'],'Panel analítico C')
@@ -796,13 +799,26 @@ def transform_c(root, output, run_id=None):
     monthly=monthly.merge(legal,on=['cuit_normalizado','fecha'],how='left',validate='one_to_one')
     for col in ['en_revision','proceso_judicial']:monthly[col]=booleanos(monthly[col])
     monthly['fecha']=fecha_iso(monthly.fecha)
+    # Miles de pesos de diciembre de 2016. La situación y los ratios internos
+    # se conservan: comparten el mismo factor dentro de cada empresa-mes.
+    debt = ajustar_montos(debt, {'monto_miles_pesos': 'monto_miles_pesos_dic2016'}, ipc)
+    amounts = ['deuda_total_positiva', 'deuda_situacion_1', 'deuda_situacion_2',
+               'deuda_situacion_3_mas', 'deuda_situacion_desconocida']
+    monthly = ajustar_montos(monthly, {c: c + '_constante_dic2016' for c in amounts},
+                              ipc, observado=monthly.mes_observado)
+    total = debt.groupby(['cuit_normalizado', 'fecha']).monto_miles_pesos_dic2016.sum(min_count=1)
+    expected = total.reindex(pd.MultiIndex.from_frame(monthly[['cuit_normalizado', 'fecha']])).to_numpy()
+    actual = monthly.deuda_total_positiva_constante_dic2016.to_numpy(dtype=float)
+    if not np.allclose(actual, expected, rtol=1e-10, atol=1e-8, equal_nan=True):
+        raise ValueError('No reconcilia deuda constante empresa-mes con detalle.')
     tables={'empresas':companies,'subsectores':sectors,'empresa_subsector':memberships,'acreedores':creditors,
             'consultas':queries,'deuda_entidad_mes':debt,'empresa_mes':monthly}
     validation=exportar_tablas(root,'c',tables,output)
     return {'run_id':run.name,'empresas':len(master),'pertenencias':len(links),
             'filas_empresa_entidad_mes':len(long),'filas_empresa_mes':len(panel),
             'meses':int(panel.fecha.nunique()),'meses_sin_observacion':int((~panel.mes_observado).sum()),
-            'relacional':validation}
+            'ajuste_ipc_detalle':resumen_ajuste(debt), 'ajuste_ipc_panel':resumen_ajuste(monthly),
+            'reconciliacion_constante':True, 'relacional':validation}
 
 # -----------------------------------------------------------------------------
 # 4. CLI: EXTRACCIÓN + TRANSFORMACIÓN, O REPROCESAMIENTO OFFLINE

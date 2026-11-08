@@ -1,9 +1,9 @@
 # Project instructions
 
 CAECE Final Project: Observatorio de Financiamiento y Endeudamiento en Argentina.
-Read README.md, docs/diseno_tablas.md and docs/plan_ml.md. The proposal is scope, not implemented models.
+Read ESTADO_PROYECTO.md and README.md first. Consult docs/diseno_tablas.md for the table contract and docs/plan_ml.md for modeling scope.
 
-- Persist exactly the 12 relational tables in config/esquema_tablas.json: 2 A, 3 B, 7 C.
+- Persist exactly the 13 relational tables in config/esquema_tablas.json: 3 A (including the IPC deflator), 3 B, 7 C.
 - Every table must have a grain, PK/FK and a mapped ICC/IAP/IEF consumer. Do not export unused EDA views.
 - Pipelines base_a.py/base_b.py/base_c.py own extraction and transformation. actualizar_bases.py coordinates them.
 - Base CLI default: extract+transform. --offline reprocesses saved sources; --extract-only acquires only.
@@ -23,3 +23,6 @@ Read README.md, docs/diseno_tablas.md and docs/plan_ml.md. The proposal is scope
   Fit preprocessing/calibration on train only. Do not claim point-in-time historical validation without vintages.
 - Model targets, scores and new data sources require a defined consumer. Do not create unused stub scripts/dependencies.
 - Keep code paths portable, update docs, and run relevant semantic and relational tests after changes.
+
+- Start ICC work from LEEME_ICC.md. The PH S1 pilot lives in ml/ and independent extensions live under experimentos/icc/.
+- Base C IEF runs through ml/ief.py, ml/baseline_ief.py and ml/isolation_ief.py. Read docs/modelo_ief.md before editing it. Preserve the fixed temporal splits and train reference. Use a new output directory for reproductions, and run docs.validar_ief and docs.validar_modelo_ief after changes.

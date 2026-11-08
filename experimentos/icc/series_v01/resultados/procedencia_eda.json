@@ -1,0 +1,21 @@
+{
+  "codigo": "01d4cf81646bd7dad6fd51a9ab312b6f10b3b344dccf84f6950a6d5d68ba0864",
+  "corte": "2026-06-30",
+  "fuentes": {
+    "ECC-Empresas.xlsx": "a80d2f5772a08987c5a447afcd7fe5ec0fe97d6ea32f2b78299de13b3ff4d50f",
+    "ECC-Familias.xlsx": "4c2f38976c7696e791fc2cf6e68f48002b6eb1245e8f46b24335b977dcd7d2de",
+    "bolmetes.pdf": "c62ada1920c0cb7c9695eedafd355aa8bd845aa715ac17e3167dcab2a044ea47",
+    "com3500.xls": "9e4c039fe9e936af09f71845510ae7c2e097ca647403480ff1d09737f0b2b729",
+    "deflactor_ipc.csv": "d5742b68e6c762e6d53b2daf01c4c309ae5f6766824aac43f1641dbd38baf8f6",
+    "ecc_empresas_normalizada.csv": "7a412b7d27c432f506fa792aa3d1b738b0b446b3be46d49de99946a60b3e4f4e",
+    "finserprom.xls": "7e3ee558c19e0cd256e00da077e6d18206b710face4d71ea1516db99a6fce4de",
+    "observaciones.csv": "bcf2f82af4b3ad0fc4a911feac67a2f65b1bf5900afd755336899d2b0b5b5e3e",
+    "perser_dest.xls": "1c7c1d35ad8f0a651d3ed18b0f6598fca84a7e10a8bc629a4879f67bac55581d",
+    "perser_priv.xls": "ad0f0cdad0f9136ceb23a8c9083a0b12278661c71a5017337dd5e1073e64dd15",
+    "preser_mon.xls": "c24d2cf22fec2c92d711aaaaedce80a6f65d1861ed191a2b2438176c40ccd1f4",
+    "preser_tas.xls": "d66658fbf285e046f1a11497621731851215349b3a33bffb57f1d44610f388f0",
+    "series.csv": "f1ec107e2dbb9947e9864cba6fecb6ee9041849b55c29e23586c0c88a945cab2",
+    "siscen.pdf": "fa572002a1a31266bbbe287219343f74f4079aa271e68824bb10cc82ecf5760d"
+  },
+  "version": "pendientes_0.1"
+}

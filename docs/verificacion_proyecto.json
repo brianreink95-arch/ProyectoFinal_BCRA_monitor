@@ -1,0 +1,292 @@
+{
+  "pruebas_codigo": 181,
+  "pruebas_empresariales_01": 8,
+  "pruebas_empresariales_02": 8,
+  "pruebas_series": 10,
+  "total_pruebas": 207,
+  "notebooks": [
+    {
+      "notebook": "01_calidad_base_a.ipynb",
+      "estado": "OK",
+      "celdas_ejecutadas": 23,
+      "renderer": "plotly_mimetype"
+    },
+    {
+      "notebook": "02_calidad_base_b.ipynb",
+      "estado": "OK",
+      "celdas_ejecutadas": 32
+    },
+    {
+      "notebook": "03_calidad_base_c.ipynb",
+      "estado": "OK",
+      "celdas_ejecutadas": 20
+    },
+    {
+      "notebook": "04_analisis_conjunto.ipynb",
+      "estado": "OK",
+      "celdas_ejecutadas": 19
+    }
+  ],
+  "ejecucion_notebooks": "Celdas secuenciales con IPython en proceso local; sin transporte Jupyter; red bloqueada",
+  "fuentes_consolidacion": 342,
+  "fuentes_faltantes": 0,
+  "fuentes_alteradas": 0,
+  "indices": [
+    {
+      "archivo": "data_analytics/modelos_icc/20261006_231124_214604/v4.0/score_d924e7b7f0e103d3c748/icc_indice.csv",
+      "columna": "icc_indice",
+      "filas": 321,
+      "meses_scoreados": 112,
+      "max_diferencia": 0.0
+    },
+    {
+      "archivo": "experimentos/icc/hipotecarios_empresariales_v02/resultados/icc_935_v02.csv",
+      "columna": "icc_indice",
+      "filas": 322,
+      "meses_scoreados": 112,
+      "max_diferencia": 0.0
+    },
+    {
+      "archivo": "experimentos/icc/hipotecarios_empresariales_v02/resultados/icc_936_v02.csv",
+      "columna": "icc_indice",
+      "filas": 322,
+      "meses_scoreados": 112,
+      "max_diferencia": 0.0
+    },
+    {
+      "archivo": "experimentos/icc/series_v01/resultados/indices/icc_finserprom_tarjetas_me_privado.csv",
+      "columna": "icc_experimental",
+      "filas": 319,
+      "meses_scoreados": 112,
+      "max_diferencia": 0.0
+    },
+    {
+      "archivo": "experimentos/icc/series_v01/resultados/indices/icc_finserprom_personales_ml_privado.csv",
+      "columna": "icc_experimental",
+      "filas": 319,
+      "meses_scoreados": 112,
+      "max_diferencia": 0.0
+    },
+    {
+      "archivo": "experimentos/icc/series_v01/resultados/indices/icc_960.csv",
+      "columna": "icc_experimental",
+      "filas": 319,
+      "meses_scoreados": 112,
+      "max_diferencia": 0.0
+    },
+    {
+      "archivo": "experimentos/icc/series_v01/resultados/indices/icc_979.csv",
+      "columna": "icc_experimental",
+      "filas": 319,
+      "meses_scoreados": 112,
+      "max_diferencia": 0.0
+    }
+  ],
+  "archivos_retirados": 180,
+  "bytes_retirados": 104551584,
+  "categorias": {
+    "Inventario, comando o evidencia de empaquetado anterior": 7,
+    "Salida duplicada; se conserva la reproducción canónica de modelos": 23,
+    "Guía de copia de sesión sustituida por LEEME_ICC y documentación técnica": 3,
+    "Diagnóstico anterior; se regenera desde código y datos vigentes": 2,
+    "Fuente idéntica; se reutiliza ECC compartida de series_v01": 1,
+    "Código idéntico o anterior; se reutilizan ml y lib centrales": 11,
+    "Fuente idéntica; se reutiliza captura compartida de series_v01": 4,
+    "Trayectoria por cada peso sin consumidor; regenerable con ejecutar.py": 42,
+    "Controles repetidos; se consolidan en controles_escenarios.csv": 28,
+    "CSV duplicado; se reutilizan candidatos empresariales 0.1": 2,
+    "Consolidación anterior; las tablas vigentes y sus fuentes se conservan": 41,
+    "Baseline nominal sustituido por S1 real": 2,
+    "Matriz sustituida por features 3.0 de la corrida vigente": 3,
+    "Archivo histórico de sesiones; decisiones vigentes en criterios y plan": 11
+  },
+  "verificacion_ief": {
+    "fecha_local": "2026-10-21",
+    "etapa": "matriz_sin_modelo",
+    "pruebas_nuevas_aprobadas": 20,
+    "regresiones_aprobadas": 40,
+    "total_ejecutadas_etapa": 60,
+    "suites": [
+      "docs.validar_ief",
+      "docs.validar_inflacion",
+      "docs.validar_semantica",
+      "docs.validar_relacional"
+    ],
+    "cobertura": {
+      "evaluacion": {
+        "filas": 600,
+        "elegibles": 585,
+        "empresas": 100,
+        "meses": 6
+      },
+      "train": {
+        "filas": 1200,
+        "elegibles": 875,
+        "empresas": 100,
+        "meses": 12
+      },
+      "validacion": {
+        "filas": 600,
+        "elegibles": 587,
+        "empresas": 100,
+        "meses": 6
+      }
+    },
+    "filas_matriz": 2400,
+    "elegibles": 2047,
+    "fuentes_alteradas": 0,
+    "tablas_alteradas": 0,
+    "reproduccion_bundle_identico": true,
+    "modelo_entrenado": false
+  },
+  "total_pruebas_distintas_con_etapa_ief": 227,
+  "verificacion_tratamiento_ief": {
+    "fecha_local": "2026-10-21",
+    "version": "0.2",
+    "etapa": "matriz_tratada_sin_modelo",
+    "pruebas_ief": 31,
+    "pruebas_agregadas_en_etapa": 11,
+    "regresiones_aprobadas": 40,
+    "total_aprobadas_etapa": 71,
+    "filas_matriz": 2400,
+    "elegibles": 2047,
+    "cobertura": {
+      "evaluacion": {
+        "filas": 600,
+        "elegibles": 585,
+        "empresas": 100,
+        "meses": 6
+      },
+      "train": {
+        "filas": 1200,
+        "elegibles": 875,
+        "empresas": 100,
+        "meses": 12
+      },
+      "validacion": {
+        "filas": 600,
+        "elegibles": 587,
+        "empresas": 100,
+        "meses": 6
+      }
+    },
+    "auditoria_detalle_c": {
+      "empresa_mes": 2400,
+      "deuda_entidad_mes": 28968,
+      "deuda_positiva_entidad_mes": 18281,
+      "columnas_reconciliadas": [
+        "deuda_total_positiva",
+        "deuda_total_positiva_constante_dic2016",
+        "n_entidades_con_saldo_positivo",
+        "hhi_deuda_positiva",
+        "situacion_max_activa",
+        "pct_deuda_situacion_2_mas"
+      ],
+      "resultado": "coinciden",
+      "alcance": "consistencia con detalle capturado; no certifica continuidad economica"
+    },
+    "casos_extremos_train_auditados": 6,
+    "transformacion": "ln(R_t) - ln(R_t-3)",
+    "referencias_ajustadas_en": "train_elegible",
+    "fuentes_alteradas": 0,
+    "tablas_alteradas": 0,
+    "reproduccion_bundle_identico": true,
+    "modelo_entrenado": false
+  },
+  "total_pruebas_distintas_con_tratamiento_ief": 238,
+  "verificacion_baseline_ief": {
+    "fecha_local": "2026-10-21",
+    "version_baseline": "0.1",
+    "version_features": "0.2",
+    "pruebas_ief": 42,
+    "pruebas_agregadas_en_etapa": 11,
+    "regresiones_aprobadas": 40,
+    "total_aprobadas_etapa": 82,
+    "filas": 2400,
+    "elegibles": 2047,
+    "cobertura": {
+      "evaluacion": {
+        "filas": 600,
+        "elegibles": 585,
+        "empresas": 100,
+        "meses": 6
+      },
+      "train": {
+        "filas": 1200,
+        "elegibles": 875,
+        "empresas": 100,
+        "meses": 12
+      },
+      "validacion": {
+        "filas": 600,
+        "elegibles": 587,
+        "empresas": 100,
+        "meses": 6
+      }
+    },
+    "meses_con_ranking": 21,
+    "meses_empate_en_borde_top5": 7,
+    "meses_empate_en_borde_top10": 20,
+    "modelo_entrenado": false,
+    "parametros_ajustados": false,
+    "fuentes_alteradas": 0,
+    "tablas_alteradas": 0,
+    "matriz_tratada_alterada": false,
+    "reproduccion_bundle_identico": true
+  },
+  "total_pruebas_distintas_con_baseline_ief": 249,
+  "verificacion_bosque_ief": {
+    "fecha_local": "2026-10-21",
+    "version_modelo": "0.1",
+    "version_features": "0.2",
+    "pruebas_nuevas": 14,
+    "pruebas_ief_totales": 56,
+    "regresiones_aprobadas": 40,
+    "total_aprobadas_etapa": 96,
+    "filas_train": 875,
+    "empresas_train": 98,
+    "filas_puntuadas": 2047,
+    "filas_sin_score": 353,
+    "parametros": {
+      "n_estimators": 300,
+      "max_samples": "auto",
+      "max_features": 1.0,
+      "contamination": "auto",
+      "bootstrap": false,
+      "random_state": 42,
+      "n_jobs": 1
+    },
+    "modelo_sha256": "45ead23177f6126eef4bb2a10b111acf07c32f6b66bdae778c179ba36a821225",
+    "scores_sha256": "705af0538314ec97a41ddcb4d98617adfce686be9515dfcfdf6c26fe49375f10",
+    "comparacion_baseline_por_bloque": {
+      "train": {
+        "meses_con_ranking": 9,
+        "spearman_medio_mensual": 0.3485840445681125,
+        "coincidencia_top5_media_mensual": 0.7806199552874408,
+        "coincidencia_top10_media_mensual": 0.4589132093795605
+      },
+      "validacion": {
+        "meses_con_ranking": 6,
+        "spearman_medio_mensual": 0.3952015341131198,
+        "coincidencia_top5_media_mensual": 0.800709219858156,
+        "coincidencia_top10_media_mensual": 0.5400385118665826
+      },
+      "evaluacion": {
+        "meses_con_ranking": 6,
+        "spearman_medio_mensual": 0.41963003998199655,
+        "coincidencia_top5_media_mensual": 0.8666666666666667,
+        "coincidencia_top10_media_mensual": 0.5850309845471137
+      }
+    },
+    "modelo_reproducido_byte_a_byte": true,
+    "scores_desde_modelo_guardado_identicos": true,
+    "reproduccion_zip_identica": true,
+    "fuentes_alteradas": 0,
+    "tablas_alteradas": 0,
+    "matriz_tratada_alterada": false,
+    "baseline_alterado": false,
+    "modelo_entrenado": true,
+    "validacion_predictiva": false
+  },
+  "total_pruebas_distintas_con_modelo_ief": 263
+}

@@ -64,6 +64,20 @@ def runtime_metadata():
     return {'python': platform.python_version(), 'pandas': pd.__version__,
             'numpy': np.__version__}
 
+def remove_tree(path):
+    """Borrar un staging/backup propio, incluso con atributos readonly de Windows."""
+    import shutil
+    import stat
+
+    def retry(function, name, error):
+        if not isinstance(error, PermissionError):
+            raise error
+        Path(name).chmod(stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
+        function(name)
+
+    shutil.rmtree(path, onexc=retry)
+
+
 def write_csv(df, path):
     """Exportación atómica; comprobar registros antes de publicar el archivo."""
     import csv
@@ -106,7 +120,7 @@ def get_pipeline(base):
 
 
 def build_analytical_run(root, output_root=None, bases=('a', 'b', 'c'), run_c=None,
-                         extract=(), acquisition_options=None):
+                         extract=(), acquisition_options=None, refresh_ipc=False):
     """Corrida nueva, comprobación de integridad y publicación de pointer al completar."""
     from datetime import datetime, timezone
     root = Path(root).resolve()
@@ -120,6 +134,9 @@ def build_analytical_run(root, output_root=None, bases=('a', 'b', 'c'), run_c=No
         raise ValueError('No se puede extraer una base que no será procesada.')
     if run_c and 'c' in extract:
         raise ValueError('No combinar run C histórico con nueva extracción de C.')
+    if refresh_ipc and 'a' not in extract:
+        # Autorización explícita de red; ninguna transformación offline descarga.
+        get_pipeline('a').adquirir_ipc(root)
     for base in dict.fromkeys(extract):
         print(f'Extrayendo Base {base.upper()}...', flush=True)
         acquired = get_pipeline(base).acquire(root, **(acquisition_options or {}).get(base, {}))
@@ -135,22 +152,47 @@ def build_analytical_run(root, output_root=None, bases=('a', 'b', 'c'), run_c=No
                 'acquired_bases': list(dict.fromkeys(extract)),
                 'source_sha256': before,
                 'code_sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
-                                for p in [Path(__file__), Path(__file__).parent / 'relacional.py', *[Path(__file__).parent.parent / PIPELINE_FILES[b] for b in bases]]},
+                                for p in [Path(__file__), Path(__file__).parent / 'relacional.py', Path(__file__).parent / 'precios.py', *[Path(__file__).parent.parent / PIPELINE_FILES[b] for b in bases]]},
                 'catalog_sha256': hashlib.sha256((root / 'config/catalogo_base_a.csv').read_bytes()).hexdigest(),
-                'schema_version': '1.0',
+                'schema_version': json.loads((root / 'config/esquema_tablas.json').read_text(encoding='utf-8'))['version'],
                 'schema_sha256': hashlib.sha256((root / 'config/esquema_tablas.json').read_bytes()).hexdigest()}
     meta_path = dest / 'run_metadata.json'
     def save_meta():
         meta_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding='utf-8')
     save_meta()
     try:
+        ipc = None
+        if set(bases) & {'a', 'c'}:
+            from lib.precios import cargar_ipc, validar_referencias_ipc
+            ipc, price_metadata = cargar_ipc(root)
+            metadata['ipc'] = price_metadata
+            if 'a' not in bases:
+                # C individual usa el mismo contrato/fuente sin extraer A.
+                from lib.relacional import validar_tablas
+                contract = json.loads((root / 'config/esquema_tablas.json').read_text(encoding='utf-8'))['bases']['a']['deflactor_ipc']
+                validar_tablas({'deflactor_ipc':ipc}, {'deflactor_ipc':contract})
+                write_csv(ipc, dest / 'base_a/deflactor_ipc.csv')
         summaries = {}
         for base in bases:
             print(f'Transformando Base {base.upper()}...', flush=True)
             if base == 'c':
-                summaries[base] = get_pipeline(base).transform_c(root, dest / 'base_c', run_c)
+                summaries[base] = get_pipeline(base).transform_c(root, dest / 'base_c', run_c, ipc=ipc)
+            elif base == 'a':
+                summaries[base] = get_pipeline(base).transform_a(root, dest / 'base_a', ipc=ipc)
             else:
                 summaries[base] = getattr(get_pipeline(base), f'transform_{base}')(root, dest / f'base_{base}')
+        if ipc is not None:
+            price_facts = {}
+            for base, names in [('a', ['observaciones']), ('c', ['deuda_entidad_mes', 'empresa_mes'])]:
+                if base in bases:
+                    for name in names:
+                        price_facts[f'{base}/{name}'] = read_csv(dest / f'base_{base}/{name}.csv', dtype={'ipc_fecha_mes':'string'})
+            validar_referencias_ipc(price_facts, ipc)
+            pending = {name: int(frame.estado_ajuste_ipc.isin(['unidad_no_validada', 'ipc_no_publicado', 'ipc_faltante']).sum())
+                       for name, frame in price_facts.items()}
+            metadata['preparacion_precios'] = {'estado': 'parcial' if any(pending.values()) else 'completa_en_subconjunto_habilitado',
+                'pendientes_por_tabla':pending, 'fk_ipc_validada':True,
+                'alcance':'A: seis stocks ICC auditados; C: saldos; B: diferido; conservar historia nominal'}
         if fingerprint(root) != before:
             raise ValueError('Los insumos cambiaron durante la transformación; repetir la corrida.')
         metadata.update(status='completed', summary=summaries, inputs_unchanged=True)
@@ -163,7 +205,8 @@ def build_analytical_run(root, output_root=None, bases=('a', 'b', 'c'), run_c=No
         pointer = 'latest.json' if set(bases) == {'a', 'b', 'c'} else 'latest_' + ''.join(bases) + '.json'
         temp = output_root / (pointer + '.tmp')
         temp.write_text(json.dumps({'run_id': run_id, 'path': f'runs/{run_id}',
-                                    'bases': list(bases)}, indent=2), encoding='utf-8')
+                                    'bases': list(bases), 'schema_version':metadata['schema_version'],
+                                    'preparacion_precios':metadata.get('preparacion_precios')}, indent=2), encoding='utf-8')
         temp.replace(output_root / pointer)
     except Exception as exc:
         metadata.update(status='failed', error=str(exc))

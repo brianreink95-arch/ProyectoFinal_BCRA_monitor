@@ -1,6 +1,7 @@
 # Diseño relacional y uso de las tablas
 
-Versión 1.0 — 4 de octubre de 2026 (Buenos Aires).
+Versión documental 2.1 — 5 de octubre de 2026 (Buenos Aires).
+Contrato de tablas: 2.0 (sin modificación de columnas ni claves).
 
 Los CSV representan tablas de una futura base relacional. Cada corrida completa
 publica un estado consistente de A, B y C. El contrato ejecutable está en
@@ -8,15 +9,14 @@ publica un estado consistente de A, B y C. El contrato ejecutable está en
 claves foráneas y asignación a índices. Los scripts validan ese contrato antes
 de exportar las tablas de cada base; el puntero conjunto se publica solo si las tres terminan.
 
-Están implementadas extracción, transformación y las 12 tablas. La primera matriz
-ICC ya consume las dos tablas A para el agregado hipotecario ML PH; es un dataset
-derivado fuera del contrato relacional, documentado en [features_icc.md](features_icc.md).
-Entrenamiento, scoring y features IAP/IEF siguen pendientes en `plan_ml.md`.
+Esta versión incorpora preparación a precios constantes antes de recalcular
+features y modelos. El criterio económico está en `criterios_datos.md`;
+las fórmulas de features y el trabajo de ML permanecen en sus documentos.
 No se generan matrices de features ni scores sin implementar su consumidor.
 
 ## Índices del proyecto
 
-- **ICC:** Condiciones Crediticias y Momentum. Dataset mensual macrocrediticio; A es su fuente principal.
+- **ICC:** Condiciones Crediticias y Momentum. Dataset mensual macrocrediticio construido, en la etapa actual, exclusivamente con A y el IPC nacional de INDEC. Base B no alimenta el ICC histórico.
 - **IAP:** Atractivo Relativo de Productos Financieros. Dataset por observación de oferta; B es principal y A aporta contexto cuando pueda alinearse temporalmente.
 - **IEF:** Estrés Financiero Empresarial. Dataset empresa-mes; C es principal y A puede aportar contexto.
 
@@ -24,15 +24,40 @@ Los tres son productos separados. No se fuerza un join entre poblaciones,
 frecuencias y calendarios distintos. No se presume una relación entre empresas
 de C y ofertas de B por compartir el nombre de un banco.
 
+## Decisión de alcance: Base B e ICC
+
+**Decisión del 5 de octubre de 2026:** excluir Base B de la construcción,
+calibración y evaluación del ICC histórico en esta etapa. Las tres tablas B
+se conservan para el IAP y el análisis de ofertas actuales.
+
+Base B se genera a partir de snapshots del Régimen de Transparencia del BCRA.
+Una captura contiene las ofertas observadas en ese momento; no reconstruye
+las condiciones ofrecidas en meses anteriores. En los archivos revisados hay
+13 capturas completas entre el 7 y el 23 de septiembre de 2026. La matriz ICC
+real actual tiene meses elegibles entre junio de 2017 y junio de 2026:
+no existe solapamiento temporal entre ambas coberturas.
+
+Por lo tanto, no se agregan features B a la matriz ICC histórica, no se
+imputan ofertas actuales hacia atrás y no se recorta el historial de A para
+forzar una unión. Se continúa acumulando snapshots B para su consumidor IAP.
+
+Una eventual incorporación de B al ICC requerirá una decisión metodológica
+explícita, suficiente historia coincidente y un protocolo de comparación
+entre ofertas equivalentes por producto, denominación, modalidad de tasa y
+beneficiario. La aparición de un primer mes coincidente no basta para
+calibrar y evaluar ese componente. Esta posibilidad futura no forma parte
+del mapeo de consumidores vigente para el ICC.
+
 ## Mapa de tablas y consumidores previstos
 
 | Tabla CSV | Grano / clave primaria | Relación | Índice y uso concreto |
 |---|---|---|---|
 | `base_a/series` | Una serie; `serie_id` | Padre de observaciones | ICC: selección, unidades, frecuencia y agregación. IAP/IEF: escoger series de contexto. |
+| `base_a/deflactor_ipc` | Mes de cierre; `fecha_mes` | Padre compartido de hechos ajustados A/C | ICC/IEF: IPC nacional INDEC y factor 100/IPC. IAP: futuro, sujeto a unidades/fechas. |
 | `base_a/observaciones` | Serie-fecha; `serie_id, fecha` | FK a series | ICC: variaciones, tasas, composición y momentum. IAP: tasas de referencia. IEF: contexto macrocrediticio. |
-| `base_b/entidades` | Prestador; `codigo_entidad` | Padre de ofertas | IAP: filtros, fichas y evaluación por entidad. ICC: identificar y contar entidades de la oferta. |
-| `base_b/snapshots` | Captura; `snapshot_id` | Padre de ofertas | IAP: disponibilidad, selección diaria y split temporal. ICC: evolución de la oferta capturada. |
-| `base_b/ofertas` | Registro dentro de una captura; `observacion_id` | FK a snapshot y entidad | IAP: costo objetivo y condiciones predictoras; comparador. ICC: agregados de oferta, cuando haya historia suficiente. |
+| `base_b/entidades` | Prestador; `codigo_entidad` | Padre de ofertas | IAP: filtros, fichas y evaluación por entidad; análisis de la oferta vigente. |
+| `base_b/snapshots` | Captura; `snapshot_id` | Padre de ofertas | IAP: disponibilidad, selección diaria y split temporal; historia de las ofertas capturadas. |
+| `base_b/ofertas` | Registro dentro de una captura; `observacion_id` | FK a snapshot y entidad | IAP: costo objetivo y condiciones predictoras; comparador y análisis de ofertas actuales. |
 | `base_c/empresas` | Persona jurídica; `cuit_normalizado` | Padre de consultas y pertenencias | IEF: universo, fichas y evaluación por empresa. La selección no depende de su deuda. |
 | `base_c/subsectores` | Rubro-subsector; `subsector_id` | Padre de pertenencias | IEF: comparación sectorial y grupos de referencia. |
 | `base_c/empresa_subsector` | Pertenencia; `cuit_normalizado, subsector_id` | FK a empresa y subsector | IEF: filtros y comparación entre pares sin convertir pertenencias en empresas distintas. |
@@ -41,7 +66,7 @@ de C y ofertas de B por compartir el nombre de un banco.
 | `base_c/deuda_entidad_mes` | Empresa-mes-acreedor; `cuit_normalizado, fecha, acreedor_id` | FK a consulta y acreedor | IEF: saldos, exposición, concentración, revisión y proceso judicial. |
 | `base_c/empresa_mes` | Empresa-mes; `cuit_normalizado, fecha` | FK a consulta | IEF: tabla longitudinal de entrada para lags, cambios, ventanas y score. |
 
-Son **12 tablas**: 2 para A, 3 para B y 7 para C. Las dimensiones adicionales
+Son **13 tablas**: 3 para A, 3 para B y 7 para C. Las dimensiones adicionales
 evitan repetir maestros en cada hecho y permiten validar referencias.
 `empresa_mes` es un hecho agregado materializado deliberadamente: tendrá un
 consumidor directo de features, y sus saldos se reconcilian con el detalle.
@@ -86,15 +111,14 @@ erDiagram
 
 **A.** Se conservan `valor_original` y `valor_analitico`. Los 41 ceros de la serie
 1199 anteriores a junio de 1993 se marcan como excepción y solo el valor analítico
-se deja nulo. No se inventa una escala para stocks pendientes de validación.
+se deja nulo. Los seis stocks ICC 927 y 1145–1149 fueron contrastados por mes con XLS
+oficiales: los valores de la API están en millones de ARS, pese al metadato
+de miles. `unidad` conserva lo declarado; `unidad_validada` identifica la
+escala verificada. Otros stocks no se habilitan automáticamente.
 Las unidades y frecuencias provienen de la dimensión de series. Agregar a mes es
 una tarea del feature engineering: media de las observaciones disponibles para
 series diarias según el catálogo; conservar una observación mensual para series mensuales.
 El mes diario abierto se detectará y excluirá antes de comparar períodos completos.
-La metodología BCRA permite repetir el último saldo conocido si falta información
-contemporánea: observación publicada no garantiza componentes actualizados.
-La tasa UVA 1240 pondera montos otorgados al sector privado; el saldo hipotecario
-927 corresponde a personas humanas. No interpretar esa tasa como promedio del stock.
 
 **B.** Solo capturas completas aportan ofertas. La tabla snapshots también
 conserva adquisiciones incompletas, sin hechos asociados, para identificar su
@@ -340,3 +364,17 @@ La definición ejecutable y su mapeo a índices están en el contrato JSON.
 | `en_revision` | boolean | Sí |  |
 | `proceso_judicial` | boolean | Sí |  |
 | `estado` | text | No |  |
+
+
+## Campos a precios constantes — contrato 2.0
+
+- A: `observaciones.valor_constante_dic2016`, expresado según `series.unidad_validada`. Habilitación actual: seis stocks ML de personas humanas, consumidor ICC. Se preservan los nominales y la excepción 1199.
+- C detalle: `deuda_entidad_mes.monto_miles_pesos_dic2016`.
+- C panel: `deuda_total_positiva_constante_dic2016`, `deuda_situacion_1_constante_dic2016`, `deuda_situacion_2_constante_dic2016`, `deuda_situacion_3_mas_constante_dic2016`, `deuda_situacion_desconocida_constante_dic2016`. Todos en miles de ARS de diciembre de 2016.
+- Hechos A/C: `ipc_fecha_mes` nullable y `estado_ajuste_ipc`. La referencia apunta al cierre mensual del deflactor aun cuando `fecha` de C sea el primer día. Un nulo tiene motivo explícito y no equivale a cero.
+- B no cambia sus columnas; la metadata declara el ajuste diferido.
+- `base_a/deflactor_ipc`: `fecha_mes`, `ipc_nacional`, `factor_deflacion`, `periodo_base`, `version_fuente`. Una sola versión por consolidación. El detalle de fuente, actualización, adquisición, hashes y cobertura está en metadata y en el cache versionado.
+
+Las relaciones entre bases usan `base: "a"` en el contrato. `lib/common.py` valida las referencias al deflactor antes de publicar el puntero final. La consolidación C individual conserva el deflactor utilizado bajo `base_a/`, sin extraer A ni duplicarlo bajo C.
+
+Distinguir escalas antes de comparar niveles A/C: millones en A frente a miles en C. Los valores constantes no eliminan diferencias de población, concepto, fuente o disponibilidad histórica. El contrato 2.0 exige que los consumidores seleccionen explícitamente las nuevas columnas; los artefactos nominales anteriores no se convierten al renombrarlos.

@@ -2,6 +2,7 @@ requests>=2.32
 pandas>=2.2,<3
 numpy>=2.0
 openpyxl>=3.1
+xlrd>=2.0.1  # lectura de XLS oficiales BCRA para auditar escala ICC
 tzdata>=2025.1
 
 # Análisis exploratorio (notebooks finales)

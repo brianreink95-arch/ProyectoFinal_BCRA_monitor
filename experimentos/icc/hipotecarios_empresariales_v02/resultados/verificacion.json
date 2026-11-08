@@ -1,0 +1,17 @@
+{
+  "ejecucion_repetida_identica": true,
+  "n_archivos": 10,
+  "hashes": {
+    "icc_936_v02.csv": "2bbae62340a23a688bca58f5804def0b7e7fc252d7cf88d4ba63db4aef5a8e55",
+    "ecc_normalizada.csv": "7a412b7d27c432f506fa792aa3d1b738b0b446b3be46d49de99946a60b3e4f4e",
+    "robustez_cortes.csv": "b3b602f3d5dc01fc19ccc34685e273723b8a7de2b3525305ca140be7019d4264",
+    "robustez_exclusiones.csv": "6fb67b3fddafdd38b8d4b822a29f55db96a3ecc9ce482b019498b56e5317a826",
+    "modelo_935_v02.json": "98ca403432eb8a30a0c15d693897c6bdae8aa5442f2b9aec5e91a451a2f7881d",
+    "modelo_936_v02.json": "b87bdb076e7138c0b14fe1add0e12a8f5df612ce9f5ab4b7327587853e10ad74",
+    "metricas_ecc.csv": "80122c093c8f511cdd7139bbbc3cb5fca706c912029020c6f71689effe01137a",
+    "procedencia.json": "c8194fe502ca23c6b8cd2faa52893e1a4520197d696f04a7882d9c6bbf3af02c",
+    "pares_ecc_icc.csv": "f662bce933551eec8d6622b504a1533c4e9485520675ac42301056639f9e7417",
+    "icc_935_v02.csv": "0ebfcc499a1dd0004fa13cec8f9c6ae18bd6070d9d9253408bd7abcb86a8ee11"
+  },
+  "pruebas_especificas_aprobadas": 8
+}

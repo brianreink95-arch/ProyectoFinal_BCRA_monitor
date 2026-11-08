@@ -604,10 +604,14 @@ def transform_b(root, output):
         separated[target] = int((invalid | (raw.notna() & values.isna())).sum())
         offers[target] = values.mask(invalid)
     validation = exportar_tablas(root,'b',{'entidades':entities,'snapshots':snapshots,'ofertas':offers},output)
+    # B permanece nominal por criterio explícito: todavía no hay un consumidor
+    # temporal ni unidades/fecha aplicable validadas para cada campo monetario.
+    # Denominación UVA/USD y cargos porcentuales no se asumen importes ARS.
     return {'registros':len(b),'snapshots_completos':int(inventory.completo.sum()),
             'snapshots_excluidos':int((~inventory.completo).sum()),'ultimo_snapshot':latest_sid,
             'registros_ultimo':int(b.snapshot_id.eq(latest_sid).sum()),'relacional':validation,
-            'calidad_metricas_originales':exclusions.to_dict('records'),'valores_adicionales_separados':separated}
+            'calidad_metricas_originales':exclusions.to_dict('records'),'valores_adicionales_separados':separated,
+            'ajuste_ipc':{'estado':'diferido', 'criterio':'docs/criterios_datos.md D08; validar unidades, fechas y consumidor antes de deflactar B'}}
 
 # -----------------------------------------------------------------------------
 # 4. CLI: EXTRACCIÓN + TRANSFORMACIÓN, O REPROCESAMIENTO OFFLINE

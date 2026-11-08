@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "scope": "Tablas de estado de una consolidación; CSV hasta migrar a un motor relacional.",
   "indices": {
     "ICC": "Condiciones Crediticias y Momentum",
@@ -68,6 +68,18 @@
           "rol_analitico": {
             "type": "text",
             "nullable": true
+          },
+          "ajuste_ipc": {
+            "type": "boolean",
+            "nullable": false
+          },
+          "unidad_validada": {
+            "type": "text",
+            "nullable": true
+          },
+          "consumidor_ajuste": {
+            "type": "text",
+            "nullable": true
           }
         },
         "foreign_keys": [],
@@ -103,6 +115,29 @@
           "excepcion_precobertura": {
             "type": "boolean",
             "nullable": false
+          },
+          "valor_constante_dic2016": {
+            "type": "number",
+            "nullable": true,
+            "unit": "unidad_validada de series; precios diciembre 2016"
+          },
+          "ipc_fecha_mes": {
+            "type": "date",
+            "nullable": true
+          },
+          "estado_ajuste_ipc": {
+            "type": "text",
+            "nullable": false,
+            "enum": [
+              "ajustado",
+              "no_aplica",
+              "sin_observacion",
+              "sin_valor_nominal",
+              "unidad_no_validada",
+              "anterior_base",
+              "ipc_no_publicado",
+              "ipc_faltante"
+            ]
           }
         },
         "foreign_keys": [
@@ -114,6 +149,16 @@
             "references": [
               "serie_id"
             ]
+          },
+          {
+            "columns": [
+              "ipc_fecha_mes"
+            ],
+            "table": "deflactor_ipc",
+            "references": [
+              "fecha_mes"
+            ],
+            "nullable": true
           }
         ],
         "indices": [
@@ -123,6 +168,47 @@
         ],
         "purpose": "Historia a frecuencia fuente para agregación mensual y contexto temporal.",
         "units_from": "series.unidad, series.moneda"
+      },
+      "deflactor_ipc": {
+        "primary_key": [
+          "fecha_mes"
+        ],
+        "columns": {
+          "fecha_mes": {
+            "type": "date",
+            "nullable": false
+          },
+          "ipc_nacional": {
+            "type": "number",
+            "nullable": false,
+            "unit": "índice diciembre 2016 = 100",
+            "minimum": 0
+          },
+          "factor_deflacion": {
+            "type": "number",
+            "nullable": false,
+            "unit": "100 / IPC nacional del mes"
+          },
+          "periodo_base": {
+            "type": "text",
+            "nullable": false,
+            "enum": [
+              "2016-12"
+            ]
+          },
+          "version_fuente": {
+            "type": "text",
+            "nullable": false,
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "foreign_keys": [],
+        "indices": [
+          "ICC",
+          "IEF",
+          "IAP"
+        ],
+        "purpose": "Único deflactor oficial mensual compartido. IAP: consumidor futuro sujeto a unidades/fechas validadas."
       }
     },
     "b": {
@@ -633,6 +719,29 @@
           "proceso_judicial": {
             "type": "boolean",
             "nullable": true
+          },
+          "monto_miles_pesos_dic2016": {
+            "type": "number",
+            "nullable": true,
+            "unit": "miles de ARS a precios diciembre 2016"
+          },
+          "ipc_fecha_mes": {
+            "type": "date",
+            "nullable": true
+          },
+          "estado_ajuste_ipc": {
+            "type": "text",
+            "nullable": false,
+            "enum": [
+              "ajustado",
+              "no_aplica",
+              "sin_observacion",
+              "sin_valor_nominal",
+              "unidad_no_validada",
+              "anterior_base",
+              "ipc_no_publicado",
+              "ipc_faltante"
+            ]
           }
         },
         "foreign_keys": [
@@ -655,6 +764,17 @@
             "references": [
               "acreedor_id"
             ]
+          },
+          {
+            "columns": [
+              "ipc_fecha_mes"
+            ],
+            "table": "deflactor_ipc",
+            "references": [
+              "fecha_mes"
+            ],
+            "nullable": true,
+            "base": "a"
           }
         ],
         "indices": [
@@ -781,6 +901,49 @@
           "estado": {
             "type": "text",
             "nullable": false
+          },
+          "deuda_total_positiva_constante_dic2016": {
+            "type": "number",
+            "nullable": true,
+            "unit": "miles de ARS a precios diciembre 2016"
+          },
+          "deuda_situacion_1_constante_dic2016": {
+            "type": "number",
+            "nullable": true,
+            "unit": "miles de ARS a precios diciembre 2016"
+          },
+          "deuda_situacion_2_constante_dic2016": {
+            "type": "number",
+            "nullable": true,
+            "unit": "miles de ARS a precios diciembre 2016"
+          },
+          "deuda_situacion_3_mas_constante_dic2016": {
+            "type": "number",
+            "nullable": true,
+            "unit": "miles de ARS a precios diciembre 2016"
+          },
+          "deuda_situacion_desconocida_constante_dic2016": {
+            "type": "number",
+            "nullable": true,
+            "unit": "miles de ARS a precios diciembre 2016"
+          },
+          "ipc_fecha_mes": {
+            "type": "date",
+            "nullable": true
+          },
+          "estado_ajuste_ipc": {
+            "type": "text",
+            "nullable": false,
+            "enum": [
+              "ajustado",
+              "no_aplica",
+              "sin_observacion",
+              "sin_valor_nominal",
+              "unidad_no_validada",
+              "anterior_base",
+              "ipc_no_publicado",
+              "ipc_faltante"
+            ]
           }
         },
         "foreign_keys": [
@@ -794,6 +957,17 @@
               "run_fuente",
               "cuit_normalizado"
             ]
+          },
+          {
+            "columns": [
+              "ipc_fecha_mes"
+            ],
+            "table": "deflactor_ipc",
+            "references": [
+              "fecha_mes"
+            ],
+            "nullable": true,
+            "base": "a"
           }
         ],
         "indices": [

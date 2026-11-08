@@ -1,159 +1,121 @@
 # Observatorio de Financiamiento y Endeudamiento
 
-Proyecto Final — Licenciatura en Ciencia de Datos, CAECE.
+Proyecto Final de la Licenciatura en Ciencia de Datos de CAECE.
+Integra fuentes públicas del BCRA, conserva su historia y desarrolla una capa
+analítica para explorar financiamiento y endeudamiento en Argentina.
 
-El proyecto organiza datos del BCRA como **tablas de una futura base relacional**.
-Por ahora se guardan en CSV; no hace falta instalar SQLite ni otro motor.
-El pipeline genera 12 tablas con tipos, claves y relaciones validadas, todas
-asignadas a un consumidor del proyecto. Ya se construye una primera matriz de
-features ICC para hipotecarios ML a personas humanas. Los modelos, scores y las
-features de IAP/IEF siguen pendientes; todavía no se entrenan ni se publican índices.
+**Empezar por [ESTADO_PROYECTO.md](ESTADO_PROYECTO.md)** para conocer el alcance
+actual, sincronizar un clon y configurar VS Code. El ZIP incluye código, datos
+y resultados de referencia. Para reproducir el ICC, ver [LEEME_ICC.md](LEEME_ICC.md).
+La limpieza anterior al modelado de Base C quedó registrada en
+[INFORME_DEPURACION.md](INFORME_DEPURACION.md).
 
-## Ejecutar
+## Estado actual
 
-Instalar desde esta carpeta:
+- Las bases A, B y C generan 13 tablas bajo contrato relacional 2.0, incluidos
+  el deflactor IPC y sus referencias. Se conservan en CSV.
+- Cuatro notebooks de `analisis/` documentan calidad y exploración con sus
+  resultados históricos guardados.
+- El piloto hipotecario PH incluye features 3.0, baseline S1 4.0,
+  entrenamiento/evaluación PCA1 y FA1, diagnóstico PCA2 y scoring reproducible.
+  Los candidatos no sustituyeron el baseline S1.
+- Se recuperaron los cierres autónomos de hipotecarios empresariales y de las
+  restantes series: siete ICC particulares experimentales en total, además de
+  indicadores parciales y series de contexto.
+- La matriz IEF de Base C está implementada con seis predictores y deuda
+  real: 2.047 filas elegibles de 2.400. La versión 0.2 trata el crecimiento
+  con logaritmos y fija referencias de diagnóstico solo en train.
+  El baseline mensual y el bosque IEF están implementados.
+  El bosque se ajustó solo con train; evaluación predictiva y revisión de casos pendientes.
+- El ICC global, IAP, la aplicación web y la operación prospectiva están
+  pendientes. Los índices son instrumentos descriptivos internos.
+
+## Mapa del proyecto
+
+| Ubicación | Función |
+| --- | --- |
+| `base_a.py`, `base_b.py`, `base_c.py` | Extraer y transformar cada base. |
+| `actualizar_bases.py` | Coordinar la consolidación ABC. |
+| `config/` | Contrato de tablas, catálogo A y maestro empresarial C. |
+| `lib/` | Lectura, validación, ajuste de precios y soporte compartido. |
+| `data_a/`, `data_b/`, `data_c/` | Fuentes y registros de adquisición. |
+| `data_analytics/latest.json` | Identificar la consolidación completa vigente. |
+| `data_analytics/runs/` | Versiones completas de las tablas; no concatenarlas. |
+| `data_analytics/features/` | Matrices de features versionadas. |
+| `data_analytics/modelos_icc/` | Referencias, modelos y scoring reproducidos con datos locales. |
+| `ml/` | Piloto ICC de personas humanas y flujo IEF de Base C (`ief.py`, `baseline_ief.py`, `isolation_ief.py`). |
+| `data_analytics/modelos_ief/` | Matrices, baseline, modelo, scores y protocolos versionados por consolidación. |
+| `experimentos/icc/` | Extensiones autónomas, con sus fuentes y resultados. |
+| `analisis/` | Notebooks explicativos de calidad y EDA. |
+| `docs/` | Diseño, decisiones, planes y validaciones. |
+
+## Entorno y ejecución
+
+La integración del ICC fue comprobada con Python 3.12. Sus dependencias están
+en `requirements_icc.txt`, que incluye las dependencias principales.
 
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install -r requirements_icc.txt
 ```
 
-Actualizar fuentes de las tres bases y reconstruir sus tablas:
-
-```bash
-python actualizar_bases.py --extract a b c
-```
-
-Actualizar solo las ofertas B y consolidar las tres bases:
-
-```bash
-python actualizar_bases.py --extract b
-```
-
-Reconstruir las tablas a partir de fuentes guardadas, sin red:
+Reconstruir las tablas con fuentes guardadas, sin descargar datos:
 
 ```bash
 python actualizar_bases.py
 ```
 
-Cada ejecución publica una carpeta nueva en `data_analytics/runs/`.
-`data_analytics/latest.json` identifica la última consolidación ABC completa.
-No concatenar corridas: son versiones del estado de las tablas, no particiones
-independientes. La entrega incluye solo la versión vigente. Su fecha es la de
-transformación; las fuentes incluidas fueron adquiridas en septiembre de 2026.
-
-## Tablas e índices
-
-| Base | Tablas que se exportan | Uso previsto |
-|---|---|---|
-| A | `series`, `observaciones` | ICC: condiciones crediticias y momentum. Contexto de IAP/IEF cuando se pueda alinear temporalmente. |
-| B | `entidades`, `snapshots`, `ofertas` | IAP: atractivo de productos y comparador. Contexto de oferta para ICC. |
-| C | `empresas`, `subsectores`, `empresa_subsector`, `acreedores`, `consultas`, `deuda_entidad_mes`, `empresa_mes` | IEF: estrés empresarial, fichas y comparación por subsector. |
-
-No se exportan fotografías duplicadas, pivots mensuales, paneles repetidos por
-subsector ni matrices de transición. Se calcularán en features/EDA cuando un
-consumidor los requiera. Los controles de calidad adicionales se registran en
-`run_metadata.json`. Las capturas incompletas B y los resultados de consulta C
-sí son tablas porque gobiernan elegibilidad y cortes temporales.
-
-La adquisición nueva de C conserva los maestros usados, cobertura y deuda
-fuente; ya no genera el antiguo target exploratorio, paneles intermedios ni
-ZIPs duplicados. Los artefactos históricos se conservan íntegros para reproducir
-los cuatro notebooks finales.
-
-## Diseño y siguiente etapa
-
-- [Diseño de tablas](docs/diseno_tablas.md): grano, PK/FK, diccionario, unidades,
-  disponibilidad, consumidores por índice y tratamiento de las salidas anteriores.
-- [Plan de ML](docs/plan_ml.md): features por índice, baselines, modelos iniciales,
-  cortes temporales, evaluación, criterios de avance y orden de implementación.
-- [Contrato ejecutable](config/esquema_tablas.json): columnas, tipos, nulabilidad,
-  claves y asignación ICC/IAP/IEF. El exportador verifica el contrato antes de escribir.
-- [Validación](docs/validacion.md): evidencia de esta entrega y límites de las pruebas.
-
-### Features ICC — implementado
-
-[Diccionario ICC](docs/features_icc.md): seis features de crédito nominal,
-TNA sobre UVA, composición por destino y volatilidad para el agregado
-**hipotecarios ML a personas humanas**, no para todo el crédito argentino.
-Una fila es un mes; las filas no elegibles conservan indicadores y motivos.
-La tasa UVA es un proxy parcial, no el costo promedio del agregado.
+Actualizar únicamente las ofertas B y consolidar las tres bases:
 
 ```bash
-python ml/features.py
+python actualizar_bases.py --extract b
 ```
 
-Lee solo A de la última consolidación ABC completa, sin red. Escribe una matriz
-única en `data_analytics/features/<run_origen>/icc.csv`, fuera de las 12 tablas.
-Origen actual: `20261005_011327_837742`; 321 meses (1999-12–2026-08), de los
-cuales **119 son elegibles (2016-08–2026-06)**. Julio/agosto de 2026 permanecen
-sin stock; no se imputan. La salida registra hashes, versión y cutoff de referencia.
-La evaluación futura será retrospectiva, no point-in-time sin vintages.
-
-### Splits y baseline hipotecario — implementado, experimental
+Actualizar las fuentes de las tres bases y reconstruir sus tablas:
 
 ```bash
-python ml/baseline.py
+python actualizar_bases.py --extract a b c
 ```
 
-Consume la matriz ICC persistida y compara tres referencias de percentiles,
-ajustadas **solo en train**: trimestral, mensual y balanceada por dimensión
-(50% crecimiento nominal, 50% condiciones de tasa UVA). Composición y volatilidad
-se conservan como descriptores con peso cero; no se borran automáticamente.
+Los comandos de extracción consultan fuentes externas. Para revisar esta
+entrega basta con los datos y resultados ya incluidos. Los experimentos
+autónomos no se actualizan implícitamente al ejecutar el coordinador ABC.
 
-Cortes fijos: **65 meses train (2016-08–2021-12)**, **24 de validación
-(2022–2023)** y **30 de evaluación retrospectiva (2024–2026-06)**. Este último
-bloque ya fue inspeccionado: **no es test final intacto**. Desde 2026-07 se
-reserva sin puntuar, aunque futuras filas resulten elegibles.
-
-Outputs con consumidor: `data_analytics/baselines/<run_origen>/icc_hipotecario.csv`
-para comparar variantes y `protocolo_icc.json` para reproducir splits/referencias.
-No son un ICC nacional, score validado ni salida web. Ver [diccionario y protocolo](docs/features_icc.md).
-
-La metodología BCRA puede arrastrar saldos: `stock_observado` confirma publicación,
-no actualización contemporánea. La tasa UVA pondera otorgamientos al sector
-privado; el stock mide saldos PH. Los extremos de 2024 coinciden con fuentes,
-pero su causa sigue pendiente; no se corrigen ni eliminan. En validación, 18/24
-tasas quedan fuera del rango de train: revisar saturación antes de un modelo.
-
-Antes de entrenamiento faltan revisión económica/metodológica y protocolo de
-estabilidad/test verdaderamente no inspeccionado. `ml/train.py`, `ml/score.py`,
-PCA, IAP e IEF no están implementados. No se añaden dependencias ni scripts vacíos.
-
-## Archivos y carpetas
-
-La raíz mantiene seis archivos: `base_a.py`, `base_b.py`, `base_c.py`,
-`actualizar_bases.py`, `requirements.txt` y este README.
-
-Cada base contiene secciones de configuración, extracción, transformación y CLI.
-`python base_a.py` extrae y transforma una sola base; `--offline` solo transforma;
-`--extract-only` solo adquiere. Las mismas opciones aplican a B y C. Usar `--help`
-para rutas y opciones. Las corridas individuales tienen su propio puntero y no
-reemplazan el estado ABC completo. No se necesita un lanzador PowerShell.
-
-| Carpeta | Función |
-|---|---|
-| `config/` | Contrato de tablas, catálogo A y maestro C. El XLSX es un único insumo editable del maestro; las tablas de salida son CSV. |
-| `data_a/`, `data_b/`, `data_c/` | Fuentes, respuestas y registros de adquisición para auditoría y reproducibilidad. No son el esquema relacional de consumo. |
-| `data_analytics/` | Corridas de las 12 tablas relacionales; `features/` contiene la matriz ICC y `baselines/` las referencias experimentales/protocolo por consolidación. |
-| `ml/` | Features y baseline experimental ICC hipotecario; modelos, entrenamiento y scoring pendientes. |
-| `analisis/` | Cuatro notebooks finales explicativos y sus resultados históricos. |
-| `lib/` | Infraestructura común, validación del contrato y adaptador de notebooks. |
-| `docs/` | Diseño, plan ML, propuesta académica, inventario y verificaciones. |
-
-Las versiones y exports anteriores están en el ZIP histórico separado. No son
-dependencias del proyecto. No se borran ni modifican las fuentes históricas.
-
-## Reglas fundamentales
-
-Preservar IDs como texto, unidades originales, ceros reportados y ausencia de
-observación. No mezclar poblaciones/monedas ni sumar subsectores solapados.
-Las claves provisionales de ofertas no identifican productos persistentes.
-La fecha del dato no equivale a su disponibilidad: el plan distingue análisis
-retrospectivo de validación point-in-time. Los índices no son probabilidades de
-default ni recomendaciones financieras personalizadas.
-
-Repetir controles desde la raíz:
+Consultar [LEEME_ICC.md](LEEME_ICC.md) para ejecutar el piloto y las extensiones.
+La suite vigente del piloto es:
 
 ```bash
-python -m unittest docs.validar_baseline_icc docs.validar_features_icc docs.validar_semantica docs.validar_relacional -v
+python -m unittest docs.validar_features_icc_v3 docs.validar_evaluate_features docs.validar_icc_s1 docs.validar_icc_factor docs.validar_icc_pca2 -q
 ```
+
+## Matriz de Base C
+
+Matriz real, tratamiento, baseline y detector retrospectivo:
+
+```bash
+python ml/ief.py
+python ml/baseline_ief.py
+python ml/isolation_ief.py entrenar
+python -m unittest docs.validar_modelo_ief docs.validar_ief -q
+```
+
+Para usar el bosque distribuido o reproducir los artefactos por hash, instalar
+las versiones indicadas en [ESTADO_PROYECTO.md](ESTADO_PROYECTO.md#entorno-de-referencia).
+El diccionario, cobertura y comandos de reproducción están en
+[Features IEF](docs/features_ief.md); el experimento completo, en
+[Plan de Base C](docs/plan_ief.md). El [baseline IEF](docs/baseline_ief.md)
+documenta prioridades mensuales y empates. El [modelo IEF](docs/modelo_ief.md)
+explica el entrenamiento, aplicación sin fit, resultados y limitaciones.
+
+## Documentación de referencia
+
+- [Diseño de tablas](docs/diseno_tablas.md): grano, claves, unidades y consumidores.
+- [Criterios económicos](docs/criterios_datos.md): preparación, S1 y controles.
+- [Diccionario de features](docs/features_icc.md): variables del piloto.
+- [Plan ML](docs/plan_ml.md): alcance y decisiones hasta el último cierre.
+- [Validación de la integración](docs/validacion.md): pruebas y reproducción.
+
+Conservar identificadores, ceros reportados y faltantes sin confundirlos. No
+mezclar poblaciones ni monedas, no sumar subsectores solapados y no convertir
+las claves de ofertas en identidades persistentes de productos. Las capturas
+retrospectivas no certifican disponibilidad histórica contemporánea. Los
+puntajes no son probabilidades de default ni recomendaciones personalizadas.

@@ -1,0 +1,53 @@
+{
+  "version": "0.2",
+  "fecha_decision": "2026-10-15",
+  "pesos_costo": [
+    0.5,
+    0.6,
+    0.7,
+    0.8
+  ],
+  "comparacion": "Delta de ICC entre cierres trimestrales frente a IDs ECC del trimestre observado. No comparar niveles ni expectativas.",
+  "dimensiones": [
+    "estandares",
+    "spread",
+    "plazo",
+    "garantias",
+    "demanda"
+  ],
+  "poblaciones": {
+    "935": "PyMEs",
+    "936": "Grandes Empresas (proxy parcial; no identidad exacta con No PyMEs)"
+  },
+  "umbral_neutral_ecc": 5,
+  "deadband_delta_icc_puntos": [
+    0.5,
+    1,
+    2
+  ],
+  "deadband_principal": 1,
+  "ventana": [
+    "2017-03-31",
+    "2026-06-30"
+  ],
+  "interseccion": "Solo pares de cierres observados; mantener calendario trimestral continuo; cada dimension separada",
+  "metricas": [
+    "Spearman contemporaneo",
+    "concordancia de signo en IDs ECC no neutrales",
+    "fraccion deltas ICC dentro deadband",
+    "dimensiones discordantes"
+  ],
+  "robustez": [
+    "Excluir cada uno de los seis episodios; fechas especificadas en protocolo de pesos previo",
+    "Mover ambos cierres de episodio -1/0/+1 mes dentro cobertura, conservando duracion",
+    "Leave-one-calendar-year descriptivo"
+  ],
+  "seleccion": "No maximizar un agregado arbitrario de dimensiones ECC. Si no hay un ganador consistente, decidir convencion economica explicita.",
+  "preferencia_de_diseno": "60/40 es candidato principal por menor dominancia de proxy nominal y mayor espacio para dinamica real, conservando prioridad moderada del costo. Evaluar evidencia contraria antes de adoptarlo.",
+  "limites": [
+    "Datos y episodios ya inspeccionados; comparacion ex post",
+    "No test intacto; no p-valores ni optimalidad",
+    "ECC empresarial amplia frente a hipotecas; spread no es tasa nominal",
+    "No refit ni actualizacion de fuentes base; PH intacto; reserva sin score"
+  ]
+}

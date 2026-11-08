@@ -74,8 +74,14 @@ def validar_tablas(tablas, contrato):
                 raise ValueError(f'{name}.{col}: formato inválido')
         for fk in spec.get('foreign_keys', []):
             child = frame[fk['columns']]
+            if fk.get('nullable'):
+                child = child.dropna()
             if child.isna().any().any():
                 raise ValueError(f'{name}: FK nula {fk["columns"]}')
+            if fk.get('base'):
+                # Las referencias entre bases se validan con el deflactor
+                # único de la corrida en lib.common antes de publicar latest.
+                continue
             parent = tablas[fk['table']][fk['references']]
             parent_keys = set(parent.itertuples(index=False, name=None))
             if any(key not in parent_keys for key in child.itertuples(index=False, name=None)):

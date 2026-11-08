@@ -1,0 +1,790 @@
+{
+  "config": {
+    "adopcion_local": "2026-10-06",
+    "comparacion": "exploratoria; validacion ya utilizada",
+    "comparador_2d": [
+      "V",
+      "H=0.80*C+0.20*M"
+    ],
+    "config_baseline": {
+      "adopcion_local": "2026-10-06",
+      "cargas_l1_min": [
+        0.2,
+        0.2,
+        0.1
+      ],
+      "cortes": {
+        "evaluacion_retrospectiva": [
+          "2024-01-31",
+          "2026-06-30"
+        ],
+        "train": [
+          "2016-08-31",
+          "2022-02-28"
+        ],
+        "validacion": [
+          "2022-03-31",
+          "2023-12-31"
+        ]
+      },
+      "coseno_min": 0.95,
+      "cuantiles": "linear",
+      "divisor_iqr": 1.349,
+      "empeoramiento_columna_max": 0.25,
+      "features": [
+        "credito_stock_real_millones_ars_dic2016",
+        "credito_var_real_3m_pct",
+        "tasa_hipotecaria_nominal_pct"
+      ],
+      "mejora_mse_min": 0.1,
+      "metodo": "S1",
+      "min_train": 60,
+      "min_validacion": 18,
+      "perturbacion": [
+        0.9,
+        1.1
+      ],
+      "peso_costo": 0.8,
+      "peso_momentum": 0.2,
+      "piso_crecimiento_pp": 0.5,
+      "piso_delta_stock": 1.0,
+      "piso_factor": 1e-06,
+      "piso_std": 1e-12,
+      "piso_tasa_pp": 0.1,
+      "prospectivos_operacion_min": 12,
+      "protocolo": "3.1",
+      "saturacion_latente_max": 0.1,
+      "sensibilidad_mae_max": 10.0,
+      "sensibilidad_rho_min": 0.9,
+      "tolerancia_economica": 1e-09,
+      "version": "4.0"
+    },
+    "coseno_subespacio_min": 0.95,
+    "indice_pca2_definido": false,
+    "mejora_reconstruccion_2d_min": 0.1,
+    "metodo": "pca2",
+    "n_components": 2,
+    "orientacion": "por eje: mayor carga absoluta positiva, sin alterar signo individual",
+    "perturbaciones": [
+      0.9,
+      1.1
+    ],
+    "piso_varianza_pc2": 1e-12,
+    "ratio_mse_input_max": 1.25,
+    "spearman_reconstruccion_min": 0.9,
+    "svd_solver": "full",
+    "version": "4.2",
+    "whiten": false
+  },
+  "controles": {
+    "cobertura": {
+      "n_train": 60,
+      "n_validacion": 22,
+      "pasa": true
+    },
+    "dos_dimensiones_identificables": {
+      "pasa": true
+    },
+    "economia_baseline": {
+      "n_escenarios": 96,
+      "naturaleza": "inputs independientes; g fijo al variar R",
+      "pasa": true,
+      "tolerancia": 1e-09,
+      "violaciones": {
+        "bajo_volumen": 0,
+        "cero_volumen": 0,
+        "mejora_estricta_tasa": 0,
+        "momentum_monotono": 0,
+        "rango": 0,
+        "tasa_monotona": 0,
+        "volumen_monotono": 0
+      }
+    },
+    "perturbaciones_subespacio": {
+      "casos": [
+        {
+          "columna": "volumen",
+          "cosenos_angulos_principales": [
+            1.0,
+            0.9900772725919075
+          ],
+          "multiplicador": 0.9,
+          "pasa": true,
+          "spearman_reconstruccion_val": [
+            0.9966120835686054,
+            0.9977413890457371,
+            0.9954827780914738
+          ]
+        },
+        {
+          "columna": "volumen",
+          "cosenos_angulos_principales": [
+            1.0,
+            0.9935694947028909
+          ],
+          "multiplicador": 1.1,
+          "pasa": true,
+          "spearman_reconstruccion_val": [
+            0.9943534726143423,
+            1.0,
+            0.9977413890457371
+          ]
+        },
+        {
+          "columna": "costo",
+          "cosenos_angulos_principales": [
+            1.0,
+            0.9906006669700508
+          ],
+          "multiplicador": 0.9,
+          "pasa": true,
+          "spearman_reconstruccion_val": [
+            0.9943534726143423,
+            0.9988706945228685,
+            0.9977413890457371
+          ]
+        },
+        {
+          "columna": "costo",
+          "cosenos_angulos_principales": [
+            0.9999999999999999,
+            0.993019552822148
+          ],
+          "multiplicador": 1.1,
+          "pasa": true,
+          "spearman_reconstruccion_val": [
+            0.9977413890457371,
+            0.9977413890457371,
+            0.9988706945228685
+          ]
+        },
+        {
+          "columna": "momentum",
+          "cosenos_angulos_principales": [
+            1.0,
+            0.9903785172924496
+          ],
+          "multiplicador": 0.9,
+          "pasa": true,
+          "spearman_reconstruccion_val": [
+            0.9988706945228685,
+            0.9988706945228685,
+            0.9966120835686054
+          ]
+        },
+        {
+          "columna": "momentum",
+          "cosenos_angulos_principales": [
+            1.0,
+            0.9943632502831954
+          ],
+          "multiplicador": 1.1,
+          "pasa": true,
+          "spearman_reconstruccion_val": [
+            1.0,
+            1.0,
+            0.9909655561829477
+          ]
+        }
+      ],
+      "nota": "Comparar subespacio/reconstruccion; no comparar ejes por nombre ni rankings de un indice inexistente.",
+      "pasa": true
+    },
+    "reconstruccion_2d": {
+      "bloques_validacion_descriptivos": [
+        {
+          "contraste_2d": {
+            "mejora_promedio": 0.4535715328191121,
+            "motivo": "",
+            "pasa": false,
+            "ratios_por_input": [
+              33.21251008453126,
+              1.2883036471016003,
+              0.1727671372617537
+            ]
+          },
+          "desde": "2022-03-31",
+          "errores": {
+            "baseline_1d": {
+              "por_input": [
+                0.11850616946039481,
+                0.4599138439893697,
+                1.060670958757331
+              ],
+              "promedio": 0.5463636574023653
+            },
+            "comparador_2d_V_H": {
+              "por_input": [
+                0.006344557389407589,
+                0.21216042292465936,
+                0.9758793651902727
+              ],
+              "promedio": 0.39812811516811325
+            },
+            "fa1": {
+              "por_input": [
+                0.12613897393142817,
+                0.033966135311772026,
+                1.1910499081186883
+              ],
+              "promedio": 0.4503850057872962
+            },
+            "pca1": {
+              "por_input": [
+                0.2347925109796991,
+                0.2352581848700214,
+                1.01259357680467
+              ],
+              "promedio": 0.49421475755146355
+            },
+            "pca2": {
+              "por_input": [
+                0.2107186762775869,
+                0.2733270466244566,
+                0.1685998842367409
+              ],
+              "promedio": 0.21754853571292812
+            }
+          },
+          "hasta": "2023-01-31",
+          "n": 11
+        },
+        {
+          "contraste_2d": {
+            "mejora_promedio": 0.4800309172652045,
+            "motivo": "",
+            "pasa": false,
+            "ratios_por_input": [
+              13.482072197439724,
+              0.2281296901780719,
+              4.071333796155523
+            ]
+          },
+          "desde": "2023-02-28",
+          "errores": {
+            "baseline_1d": {
+              "por_input": [
+                0.03460388926567237,
+                12.327096073862977,
+                0.38508574851868005
+              ],
+              "promedio": 4.24892857054911
+            },
+            "comparador_2d_V_H": {
+              "por_input": [
+                0.10722751592727149,
+                8.219788862656799,
+                0.284106013281715
+              ],
+              "promedio": 2.870374130621928
+            },
+            "fa1": {
+              "por_input": [
+                0.6849563483175442,
+                0.37099914790376104,
+                0.883632912619595
+              ],
+              "promedio": 0.6465294696136333
+            },
+            "pca1": {
+              "por_input": [
+                1.9582102920037727,
+                1.9392246736635976,
+                0.8628065336421891
+              ],
+              "promedio": 1.5867471664365198
+            },
+            "pca2": {
+              "por_input": [
+                1.445649111283592,
+                1.8751778865670614,
+                1.1566904135648561
+              ],
+              "promedio": 1.4925058038051697
+            }
+          },
+          "hasta": "2023-12-31",
+          "n": 11
+        }
+      ],
+      "coeficientes_baseline_1d_train": [
+        [
+          -1.429991253304423,
+          -1.7690463533467962,
+          -0.6282856993308102
+        ],
+        [
+          0.058504116193323685,
+          0.07237561290561532,
+          0.025704562507857746
+        ]
+      ],
+      "coeficientes_comparador_2d_train": [
+        [
+          -4.857190032562907,
+          -2.9705463238180796,
+          0.07980588259581811
+        ],
+        [
+          8.654529757290987,
+          0.9793851870862067,
+          -3.538890647591971
+        ],
+        [
+          0.39309395789034807,
+          5.522989045773007,
+          4.1533172537208065
+        ]
+      ],
+      "comparador_2d_rango_diseno": 3,
+      "contraste_2d": {
+        "mejora_promedio": 0.4768079655687205,
+        "motivo": "",
+        "pasa": false,
+        "ratios_por_input": [
+          14.584287661480301,
+          0.25480524851654857,
+          1.0518299025095088
+        ]
+      },
+      "contraste_baseline_1d_descriptivo": {
+        "mejora_promedio": 0.6433889201683493,
+        "motivo": "",
+        "pasa": false,
+        "ratios_por_input": [
+          10.81815134382925,
+          0.16802246553292513,
+          0.9166758771595894
+        ]
+      },
+      "metricas": {
+        "baseline_1d": {
+          "dimensiones": 1,
+          "train": {
+            "por_input": [
+              0.4638901240435082,
+              0.17952477662297722,
+              0.8965092832234682
+            ],
+            "promedio": 0.5133080612966512
+          },
+          "validacion": {
+            "por_input": [
+              0.07655502936303359,
+              6.393504958926173,
+              0.7228783536380056
+            ],
+            "promedio": 2.3976461139757377
+          }
+        },
+        "comparador_2d_V_H": {
+          "dimensiones": 2,
+          "train": {
+            "por_input": [
+              0.0040000531897929825,
+              0.0628079380211167,
+              0.5051474508736339
+            ],
+            "promedio": 0.19065181402818118
+          },
+          "validacion": {
+            "por_input": [
+              0.05678603665833954,
+              4.215974642790729,
+              0.6299926892359938
+            ],
+            "promedio": 1.634251122895021
+          }
+        },
+        "fa1": {
+          "dimensiones": 1,
+          "train": {
+            "por_input": [
+              0.785874997126154,
+              0.013178848915654667,
+              0.8631704420925935
+            ],
+            "promedio": 0.5540747627114674
+          },
+          "validacion": {
+            "por_input": [
+              0.4055476611244862,
+              0.20248264160776655,
+              1.0373414103691416
+            ],
+            "promedio": 0.5484572377004647
+          }
+        },
+        "pca1": {
+          "dimensiones": 1,
+          "train": {
+            "por_input": [
+              0.5511063039078697,
+              0.15114751284768443,
+              0.8201722618978526
+            ],
+            "promedio": 0.5074753595511355
+          },
+          "validacion": {
+            "por_input": [
+              1.0965014014917358,
+              1.0872414292668096,
+              0.9377000552234297
+            ],
+            "promedio": 1.0404809619939916
+          }
+        },
+        "pca2": {
+          "dimensiones": 2,
+          "train": {
+            "por_input": [
+              0.1104185730933924,
+              0.1432259494471482,
+              0.08834792895437454
+            ],
+            "promedio": 0.11399748383163838
+          },
+          "validacion": {
+            "por_input": [
+              0.8281838937805894,
+              1.074252466595759,
+              0.6626451489007986
+            ],
+            "promedio": 0.8550271697590489
+          }
+        }
+      },
+      "nota": "PCA2 y V/H conservan 2 dimensiones; las comparaciones 1D son descriptivas. Reconstruccion no valida un ICC.",
+      "pasa": false
+    },
+    "sensibilidad_baseline": {
+      "pasa": true,
+      "regla": "rho>=0.90 y MAE<=10 en train y validacion; no elegir ganador",
+      "variantes": [
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 2.3707058599848136,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9742150597388166
+            },
+            "validacion": {
+              "mae": 1.6005416798803251,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9785431959345003
+            }
+          },
+          "pasa": true,
+          "valor": 0.0,
+          "variante": "peso_momentum"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 1.1853529299924086,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9952208946929706
+            },
+            "validacion": {
+              "mae": 0.8002708399401612,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9920948616600791
+            }
+          },
+          "pasa": true,
+          "valor": 0.3,
+          "variante": "peso_momentum"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 2.8940867938204637,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9978883023061964
+            },
+            "validacion": {
+              "mae": 1.3403985878305598,
+              "n": 22,
+              "pasa": true,
+              "spearman": 1.0
+            }
+          },
+          "pasa": true,
+          "valor": 0.75,
+          "variante": "R0"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 2.301773462252913,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9989441511530981
+            },
+            "validacion": {
+              "mae": 1.033092617913381,
+              "n": 22,
+              "pasa": true,
+              "spearman": 1.0
+            }
+          },
+          "pasa": true,
+          "valor": 1.25,
+          "variante": "R0"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 1.8820195637512234,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9963878855237567
+            },
+            "validacion": {
+              "mae": 1.3850126648754346,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9887069452286844
+            }
+          },
+          "pasa": true,
+          "valor": 0.75,
+          "variante": "escalas"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 1.3270270649016827,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9962211725479302
+            },
+            "validacion": {
+              "mae": 1.2001813694438446,
+              "n": 22,
+              "pasa": true,
+              "spearman": 1.0
+            }
+          },
+          "pasa": true,
+          "valor": 1.25,
+          "variante": "escalas"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 1.4157356582191387,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9839399833287028
+            },
+            "validacion": {
+              "mae": 1.7662584399984482,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9265951439864484
+            }
+          },
+          "escala_train": 4.450147921701012,
+          "pasa": true,
+          "variante": "crecimiento_mensual"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 0.8014744014940224,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9961100305640458
+            },
+            "validacion": {
+              "mae": 0.7951890997080745,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9988706945228685
+            }
+          },
+          "escala_train": 408.80203984480465,
+          "pasa": true,
+          "variante": "delta_stock_3m"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 2.022645230713915,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.977604890247291
+            },
+            "validacion": {
+              "mae": 0.988805182323005,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9875776397515529
+            }
+          },
+          "escala_train": 4.844329132690881,
+          "pasa": true,
+          "variante": "cambio_tasa"
+        }
+      ]
+    },
+    "variacion_inputs": {
+      "pasa": true,
+      "std_y_train": [
+        0.26644987752962696,
+        11.447820329894926,
+        0.9542942337510065
+      ]
+    }
+  },
+  "fuente": {
+    "experimento": "hipotecarios_empresariales_0.1",
+    "fuentes_reconstruidas": true,
+    "hashes_codigo": {
+      "evaluar_hipotecarios.py": "f129bafd41be543b9e03b79b43d020823bf023c75e03c25d0c76adfda197ca74",
+      "validar_empresariales.py": "beb5d7857c0e0711d2670bd11d9803f8f7b34448adf106e8810d9d7b054d98b1"
+    },
+    "hashes_fuentes": {
+      "deflactor_ipc.csv": "d5742b68e6c762e6d53b2daf01c4c309ae5f6766824aac43f1641dbd38baf8f6",
+      "observaciones_api.csv": "bcf2f82af4b3ad0fc4a911feac67a2f65b1bf5900afd755336899d2b0b5b5e3e",
+      "perser_priv.xls": "ad0f0cdad0f9136ceb23a8c9083a0b12278661c71a5017337dd5e1073e64dd15",
+      "preser_tas.xls": "d66658fbf285e046f1a11497621731851215349b3a33bffb57f1d44610f388f0"
+    }
+  },
+  "modelo_admitido_para_icc": false,
+  "parametros": {
+    "cargas": [
+      [
+        0.5511846883854751,
+        0.7579516523454175,
+        0.34886205296113565
+      ],
+      [
+        -0.6110049003197413,
+        0.08191900427611794,
+        0.7873768402256143
+      ]
+    ],
+    "centro_pca": [
+      -9.843977485009722e-16,
+      8.0629947163402e-16,
+      4.4408920985006264e-17
+    ],
+    "media_y_train": [
+      0.8127255131995589,
+      -34.61883333333334,
+      -0.455710800664509
+    ],
+    "n_components": 2,
+    "std_y_train": [
+      0.26644987752962696,
+      11.447820329894926,
+      0.9542942337510065
+    ],
+    "svd_solver": "full",
+    "varianza_explicada": [
+      1.5026175471321292,
+      1.2004409767713473
+    ],
+    "varianza_explicada_ratio": [
+      0.4925246404488645,
+      0.39347787571949716
+    ],
+    "whiten": false
+  },
+  "referencias": {
+    "R0": 3291.1171718759006,
+    "fechas_train": [
+      "2017-03-31",
+      "2017-04-30",
+      "2017-05-31",
+      "2017-06-30",
+      "2017-07-31",
+      "2017-08-31",
+      "2017-09-30",
+      "2017-10-31",
+      "2017-11-30",
+      "2017-12-31",
+      "2018-01-31",
+      "2018-02-28",
+      "2018-03-31",
+      "2018-04-30",
+      "2018-05-31",
+      "2018-06-30",
+      "2018-07-31",
+      "2018-08-31",
+      "2018-09-30",
+      "2018-10-31",
+      "2018-11-30",
+      "2018-12-31",
+      "2019-01-31",
+      "2019-02-28",
+      "2019-03-31",
+      "2019-04-30",
+      "2019-05-31",
+      "2019-06-30",
+      "2019-07-31",
+      "2019-08-31",
+      "2019-09-30",
+      "2019-10-31",
+      "2019-11-30",
+      "2019-12-31",
+      "2020-01-31",
+      "2020-02-29",
+      "2020-03-31",
+      "2020-04-30",
+      "2020-05-31",
+      "2020-06-30",
+      "2020-07-31",
+      "2020-08-31",
+      "2020-09-30",
+      "2020-10-31",
+      "2020-11-30",
+      "2020-12-31",
+      "2021-01-31",
+      "2021-02-28",
+      "2021-03-31",
+      "2021-04-30",
+      "2021-05-31",
+      "2021-06-30",
+      "2021-07-31",
+      "2021-08-31",
+      "2021-09-30",
+      "2021-10-31",
+      "2021-11-30",
+      "2021-12-31",
+      "2022-01-31",
+      "2022-02-28"
+    ],
+    "metodo": "S1",
+    "n_train": 60,
+    "r0": 31.619999999999997,
+    "rangos_train": {
+      "credito_stock_real_millones_ars_dic2016": [
+        2129.144059541167,
+        8794.530446284232
+      ],
+      "credito_var_real_3m_pct": [
+        -25.12074633864708,
+        27.082751806981477
+      ],
+      "tasa_hipotecaria_nominal_pct": [
+        17.18,
+        57.68
+      ]
+    },
+    "sg": 8.186173360979108,
+    "sr": 13.973313565604158,
+    "train_sha256": "f19fcb7311f8c662bc87046779ae146ee056c68cbed544c6cc00547fa494210a",
+    "version": "4.0"
+  },
+  "serie_stock": 936,
+  "tasa": "nominal ML fija/repactable por titular, no UVA",
+  "uso": "diagnóstico exploratorio; equivalencia de modalidad/población pendiente"
+}

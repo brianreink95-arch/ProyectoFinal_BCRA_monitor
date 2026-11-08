@@ -1,128 +1,136 @@
-# Plan de feature engineering, entrenamiento y scoring
+# Plan de análisis y modelado
 
-Versión 1.2 — 4 de octubre de 2026 (Buenos Aires).
+Estado metodológico consolidado al 15 de octubre de 2026. Proyecto depurado el
+21 de octubre. Protocolo temporal del piloto 3.1; features 3.0; S1 4.0;
+FA1 4.1 y diagnóstico PCA2 4.2. La guía de ejecución es `../LEEME_ICC.md`.
 
-Fuente de objetivos: propuesta del Proyecto Final, secciones 9.1, 9.2 y 9.3.
-Este documento distingue avance real y trabajo pendiente. **Las primeras features
-ICC están implementadas; los modelos y los scores todavía no.** No hay targets,
-etiquetas de default ni índices simulados presentados como resultados reales.
+## Estado vigente
 
-## Organización y secuencia de implementación
+Hay siete ICC particulares experimentales para uso descriptivo interno, nueve
+indicadores parciales de volumen y dinámica, siete series de contexto y una
+diferida. El índice global no está definido. La matriz IEF 0.2 está implementada
+con deuda real, seis predictores y 2.047 filas elegibles. El baseline mensual
+y el bosque están implementados; quedan pendientes las evaluaciones secundarias
+IEF, IAP, la web y las alertas operativas.
 
-1. **Tablas relacionales — implementado.** Ejecutar `actualizar_bases.py` y validar
-   las 12 tablas del contrato, referencias, cobertura y reconciliación.
-2. **Feature engineering — ICC inicial implementado.** `ml/features.py` lee solo
-   A de la consolidación ABC completa indicada por `data_analytics/latest.json`,
-   aplica los tipos/PK/FK del contrato y verifica hashes. Publica una única matriz
-   ICC con origen, cutoff de referencia, versión, hashes y elegibilidad; conserva
-   filas excluidas y sus motivos. IAP/IEF y ampliaciones ICC siguen pendientes.
-   El diccionario y las limitaciones están en [features_icc.md](features_icc.md).
-3. **Baselines — ICC hipotecario experimental implementado.** `ml/baseline.py`
-   consume la matriz persistida verificada, congela splits por calendario y
-   ajusta referencias empíricas solo en train. Compara tres variantes con las
-   mismas filas elegibles; guarda referencias/splits y diagnósticos train/validación.
-   No entrena un modelo ni produce un score validado. Baselines IAP/IEF pendientes.
-4. **Entrenamiento — posterior.** Implementar `ml/train.py` con preprocesamiento,
-   modelo, configuración, semilla, métricas y versión de datos reproducibles.
-5. **Scoring — posterior.** Implementar `ml/score.py` para aplicar artefactos ya
-   ajustados, sin reentrenarlos, y producir las tres salidas de índices.
+| Segmento | Serie | Peso costo | Peso momentum |
+| --- | --- | --- | --- |
+| Hipotecarios PH ML | 927 | 80% | 20% |
+| Hipotecarios PyMEs ML | 935 | 60% | 40% |
+| Hipotecarios No PyMEs ML | 936 | 80% | 20% |
+| Prendarios PH ML | 960 | 50% | 50% |
+| Prendarios PyMEs ME | 979 | 50% | 50% |
+| Personales sector privado ML | finserprom_personales_ml_privado | 60% | 40% |
+| Tarjetas sector privado ME | finserprom_tarjetas_me_privado | 60% | 40% |
 
-Estos nombres son el plan de archivos; no se crean scripts vacíos ni nuevas
-dependencias ML hasta implementarlos. Mantener la extracción y transformación
-de tablas en `base_a.py`, `base_b.py` y `base_c.py`.
+Cada índice usa referencias propias. Sus niveles no se ordenan ni se promedian
+como si expresaran condiciones absolutas comparables. ML usa saldo real en ARS;
+ME usa USD equivalentes nominales y no se deflacta con IPC argentino.
 
-Las matrices de features son datasets de entrenamiento derivados y versionados,
-no nuevas dimensiones de la base relacional. Los scores sí serán resultados
-con un consumidor definido en la web. No escribir archivos de scores si el
-modelo no cumple sus criterios de validación.
+## Función interna del ICC
 
-## ICC — Condiciones Crediticias y Momentum
+El ICC ayuda a localizar cambios y revisar su origen por segmento, dimensión y
+serie. Su puntaje se consume internamente. La información destinada al usuario
+explica qué cambió, qué componentes contribuyeron y cuáles son las fuentes,
+fechas, cobertura y limitaciones. Los aportes algebraicos no prueban causalidad.
 
-**Unidad:** mes y segmento (o agregado definido). **Fuentes:** A/series y
-A/observaciones. B/snapshots y B/ofertas solo aportarán contexto de oferta en
-las ventanas donde haya historia suficiente, sin recortar toda A al corto
-solapamiento disponible.
+Se deben distinguir nivel y dirección: un contexto débil que mejora y otro
+favorable que empeora pueden producir valores parecidos o invertir su orden.
+El saldo vigente no mide acceso individual, ofertas disponibles ni originaciones.
+Las tasas utilizadas son proxies parciales y no equivalen al costo financiero
+total de cada población de saldos.
 
-**Avance real 1.0:** agregado `Hipotecarios ML a personas humanas`, no un ICC
-nacional. Seis features: cambios nominales de 927 a 1/3 meses; nivel de TNA UVA
-1240 y cambio a 3 meses; participación de construcción 1145/927; volatilidad de
-seis cambios mensuales. El desglose 1145–1149 valida composición, no agrega
-predictores. La tasa UVA es un proxy parcial del agregado, no su costo promedio.
-No se suman stocks ML/ME ni se certifica su escala absoluta: los cocientes
-suponen escala constante/común y se comprueba coherencia interna.
+## Piloto hipotecario PH
 
-Salida `data_analytics/features/<run_origen>/icc.csv`, con PK
-`(fecha_mes, segmento)`. Origen actual `20261005_011327_837742`: 321 filas
-1999-12–2026-08, **119 elegibles consecutivas 2016-08–2026-06**, 202 excluidas
-conservadas. No hay series diarias en esta selección; no se aceptan referencias
-posteriores a cada fila ni se imputa. No hay disponibilidad histórica verificada.
-Diccionario, reglas y ejemplos reales: [features_icc.md](features_icc.md).
-Ejecutar `python ml/features.py`; validar con `python -m unittest docs.validar_features_icc -v`.
+Secuencia desde la raíz del proyecto:
 
-La tabla siguiente describe familias y ampliaciones previstas; no todas sus
-ventanas/series están implementadas. Los splits y el baseline inicial ya existen;
-antes de modelos revisar extremos, saturación y protocolo de estabilidad.
-Composición y volatilidad quedan como descriptores con peso cero, sin dirección
-automática. El stock publicado puede contener saldos arrastrados por BCRA;
-`stock_observado=True` no certifica contemporaneidad. La tasa 1240 pondera
-montos otorgados al sector privado, no saldos PH: no es la misma población.
-No se eliminan extremos ni columnas por correlaciones observadas.
+1. `actualizar_bases.py` integra fuentes y genera las 13 tablas bajo contrato 2.0.
+2. `ml/features.py` prepara 14 candidatas con cobertura y procedencia.
+3. `ml/baseline.py` ajusta las referencias S1 exclusivamente en train.
+4. `ml/train.py` evalúa explícitamente `pca`, `factor_analysis` o `pca2`.
+5. `ml/score.py` aplica el artefacto elegido sin refit.
 
-| Familia de features | Construcción inicial | Condición |
-|---|---|---|
-| Tasas | Media mensual de tasas diarias; nivel y cambio en puntos porcentuales a 1/3 meses. | Unidad y frecuencia del catálogo; mes completo. |
-| Crédito | Variación nominal a 1/3/12 meses y tendencia a 3/6 meses, por segmento/línea. | Mismos conceptos y unidades; denominador válido; meses consecutivos. |
-| Composición | Participaciones dentro de categorías comparables, sin sumar ML con ME sin regla explícita. | Evitar doble conteo y agregados solapados. |
-| Momentum/volatilidad | Cambios y ventanas retrospectivas de variaciones, no de magnitudes incompatibles. | Historial completo requerido para cada ventana. |
-| Oferta B, posterior | Número de prestadores y distribuciones de costos por familia/denominación/tasa. | Solo captura diaria completa, disponible al cutoff; no contar registros como productos únicos. |
+La consolidación distribuida es `20261006_231124_214604`. El core contiene
+saldo real R, crecimiento real trimestral g y TNA UVA r. Se conserva la
+población de saldos PH y la diferencia con la población de la proxy de tasa.
+No se imputan faltantes.
 
-Crear un registro de features con nombre, fórmula, unidad, series usadas,
-ventana, mínimo de observaciones, tratamiento de nulos, cutoff y dirección
-económica esperada. No asumir que toda tasa alta o todo stock alto expresa
-expansión; definir la orientación de cada componente antes de ajustar el índice.
+S1: `B = 100 V (0.80 C + 0.20 M)`, con `V = R/(R+R0)`,
+`C = logística((r0-r)/sr)` y `M = logística(g/sg)`.
+Las medianas, escalas y pisos se fijan en los mismos 60 meses comunes de train.
+El punto R0/r0/g=0 vale 25 y no se interpreta 50 como neutralidad económica.
+Los criterios completos están en `criterios_datos.md`, secciones 9 a 11.
 
-**Baseline implementado:** referencias experimentales con ECDF de rango medio
-ajustada solo en train. Trimestral y mensual: 50% crecimiento nominal a 3 o 1
-meses + 50% percentil inverso de TNA UVA. Variante balanceada: stock (media de
-los percentiles a 1/3 meses) mantiene 50%, tasa (nivel/cambio inversos) 50%.
-Composición y volatilidad se conservan con peso cero. No hay variante ganadora,
-optimización de pesos, regímenes ni score productivo.
+| Bloque | Calendario | Meses core | Función |
+| --- | --- | --- | --- |
+| Train | Agosto 2016 a febrero 2022 | 60, desde marzo 2017 | Único ajuste de referencias y modelos. |
+| Validación | Marzo 2022 a diciembre 2023 | 22 | Contraste con criterios fijados. |
+| Retrospectiva | Enero 2024 a junio 2026 | 30 | Aplicación descriptiva posterior a la decisión. |
+| Reserva | Desde julio 2026 | Sin score | Requiere protocolo separado. |
 
-**Splits 1.0 congelados:** train 2016-08–2021-12 (65 meses, mínimo 60);
-validación 2022–2023 (24); evaluación retrospectiva 2024–2026-06 (30).
-Este bloque ya fue inspeccionado y **no es test final intacto**. Reserva posterior
-desde 2026-07: no puntuar, ni siquiera al incorporar observaciones elegibles.
-No se garantiza que todas sus variables sean desconocidas: julio/agosto ya tienen tasa.
-Un test realmente no inspeccionado debe definirse antes del modelo.
+No hay shuffle ni test intacto nuevo. Los controles conservan sus mínimos:
+60 meses train y 18 de validación. La validación ya fue examinada; se explicita
+el carácter exploratorio de los contrastes sucesivos.
 
-Se publica un CSV de comparación y un JSON de splits, referencias train, pesos,
-hashes y diagnósticos bajo `data_analytics/baselines/<run_origen>/`. Se conserva
-la única matriz de features sin cambios. Usar `python ml/baseline.py`.
-El [protocolo completo](features_icc.md) documenta redundancia, los tres extremos
-2024 de causa pendiente y sensibilidad: 18/24 tasas de validación fuera del
-rango train. No recalibrar sobre validación/test para resolver saturación.
-**Primer modelo:** escalado + PCA; evaluar si el factor captura variación coherente
-y estable. Orientar su signo con una referencia económica declarada, no con
-el período de test. K-Means/GMM para regímenes son una segunda comparación, no
-una etiqueta verdadera de expansión/restricción. HMM queda como alternativa
-posterior si justifica su complejidad.
+### Decisiones sobre los candidatos
 
-**Evaluación:** ventanas expansivas mensuales con test posterior por fechas;
-estabilidad de cargas, sensibilidad a selección y ventanas, varianza explicada,
-coherencia económica y comparación con baseline. No medir accuracy sin etiquetas
-externas justificadas. Las fronteras de régimen y la transformación a 0–100 se
-calibran en entrenamiento y permanecen fijas al evaluar.
+PCA1 mejora 14,21% el MSE medio de validación, pero deteriora la reconstrucción
+de volumen y momentum más allá del máximo por columna: queda rechazado.
+FA1 también incumple los controles y no sustituye S1.
+PCA2 explica 90,25% de la varianza de train y recupera volumen; su MSE de
+validación es 19,62% mayor que el comparador V/H de dos dimensiones. No tiene
+una agregación escalar aprobada. El índice vigente continúa siendo S1.
+Se conservan los JSON, informes y scores canónicos bajo
+`data_analytics/modelos_icc/20261006_231124_214604/`.
 
-**Bloqueos:** stocks de escala absoluta pendiente no sirven para sumas de nivel;
-las variaciones relativas solo se habilitan tras comprobar consistencia temporal.
-No hay deflactor contratado: no llamarlas crecimiento real. La cotización USD
-aislada no habilita conversión histórica, momentum cambiario ni comparación real.
+## Extensiones empresariales
 
-**Matriz inicial implementada:** una fila `(fecha_mes, segmento)` con seis features,
-procedencia, banderas y motivos de exclusión. Los splits congelados se publican
-en el artefacto de baseline, sin duplicar/reemplazar la matriz.
-**Score previsto:** `(fecha_mes, segmento, version_modelo)` con
-score 0–100, momentum y régimen si su definición se valida.
+La evaluación de hipotecarios empresariales usa código ML compartido del piloto
+con un adaptador explícito de población y de tasa nominal fija/repactable.
+`experimentos/icc/hipotecarios_empresariales_v01/` conserva el experimento y sus
+rechazos PCA1/FA1/PCA2. Los candidatos 80/20 son una referencia histórica para
+comparar pesos y no sustituyen el cierre 0.2.
+
+La comparación está en `experimentos/icc/pesos_empresariales_v01/`.
+El cierre vigente, en `experimentos/icc/hipotecarios_empresariales_v02/`, aplica
+60/40 a PyMEs 935 y conserva 80/20 en No PyMEs 936. Se mantienen las referencias
+de train y se contrastan 37 trimestres ECC observados. La ECC empresarial no
+coincide exactamente con la línea hipotecaria: se conserva esta limitación.
+No se afirma optimalidad estadística ni validación operativa de los pesos.
+
+## Cierre de las otras series
+
+Se evaluaron 21 series adicionales y se conservaron los tres ICC hipotecarios
+previos. El cierre de `experimentos/icc/series_v01/` publica cuatro ICC nuevos,
+nueve parciales IVD, siete series de contexto y una diferida. El registro de
+estados está en `resultados/registro_decisiones.csv` dentro de esa carpeta.
+
+Los cuatro índices nuevos pasan el protocolo numérico de esta versión. Las
+correlaciones externas débiles o negativas, la sensibilidad temporal y las
+proxies imperfectas permanecen explícitas. Superar esos controles no valida
+por sí solo una medida integral de condiciones crediticias.
+Los 28 controles por serie/peso están tabulados en `controles_escenarios.csv`.
+Las trayectorias de todos los candidatos son regenerables desde los snapshots;
+se distribuyen las salidas seleccionadas, parciales y métricas completas.
+El informe de cierre contiene las decisiones y sus fundamentos.
+
+## Trabajo pendiente del ICC
+
+1. Formalizar un constructo común antes de combinar índices particulares.
+2. Resolver comparabilidad de escalas propias, ML/ME, saldos medios/cierres,
+   solapamiento de totales y subproductos, cobertura comercial y residuales.
+3. Predefinir pesos globales, calendario, cobertura mínima y ausencias. No
+   rellenar faltantes con cero ni renormalizar pesos silenciosamente.
+4. Implementar y evaluar la observabilidad: recorrido global, segmentos,
+   componentes y series con explicaciones que reconcilien con las fórmulas.
+5. Validar la utilidad de las señales frente a observar directamente las
+   variables. Distinguir cambios económicos de revisiones o cambios de cobertura.
+6. Definir un protocolo prospectivo independiente antes de habilitar operación;
+   el piloto exige al menos 12 nuevos meses completos para esa etapa.
+
+El ICC global agrega condiciones de segmentos compatibles; no es un promedio
+de ICC, IAP e IEF. El acta de bloqueo está en
+`experimentos/icc/series_v01/resultados/decision_global.json`.
 
 ## IAP — Atractivo Relativo de Productos Financieros
 
@@ -178,13 +186,22 @@ con score, costo esperado, residual, grupo comparable y elegibilidad.
 
 ## IEF — Estrés Financiero Empresarial
 
+**Avance del 21 de octubre:** matriz y tratamiento 0.2 implementados en `ml/ief.py`.
+Protocolo específico: `plan_ief.md`; diccionario, elegibilidad y cobertura:
+`features_ief.md`. Las familias siguientes describen posibles extensiones;
+el primer core queda restringido a las seis variables de ese diccionario.
+El baseline de prioridad mensual está implementado en `ml/baseline_ief.py`,
+con reglas, empates y resultados en `baseline_ief.md`. El bosque IEF 0.1 está entrenado con 875 filas, con puntuación y comparación
+retrospectiva frente al baseline. Ver `modelo_ief.md`. El contraste t+1,
+los grupos y la revisión humana de casos continúan pendientes.
+
 **Unidad:** CUIT-mes. **Fuentes:** C/empresa_mes y deuda_entidad_mes; empresas,
 consultas y acreedores para universo, disponibilidad y detalle; empresa_subsector
 y subsectores para comparaciones sectoriales. A podrá agregar contexto temporal.
 
 | Familia de features | Construcción inicial | Condición |
 |---|---|---|
-| Exposición | log1p de deuda en miles de pesos; cambios a 1/3 meses y ventanas a 3/6 meses. | Solo meses observados; cambios relativos con denominador positivo. |
+| Exposición | log1p de deuda en miles de pesos de diciembre de 2016; cambios reales a 1/3 meses y ventanas a 3/6 meses. | Solo meses observados; cambios relativos con denominador positivo. |
 | Acreedores | Cantidad activa, entradas/salidas, HHI y participación del principal. | Concentración solo con saldo positivo; entradas/salidas requieren revisar cambios de denominación, pues el ID de C es técnico y no un identificador jurídico estable. |
 | Situación | Situación activa, proporciones por situación y cambios mensuales. | Situaciones desconocidas y falta de saldo no se convierten a categoría 1. |
 | Señales legales | Revisión y proceso judicial, y cambios de esas señales. | Respetar flags conocidos/desconocidos de las entidades reportadas. |
@@ -224,8 +241,8 @@ observación y no imputar su etiqueta. Separar el target de los predictores;
 embargo temporal para el horizonte y test final intacto. Los 37 empeoramientos
 descriptivos actuales no justifican por sí solos entrenar un clasificador.
 
-**Matriz prevista:** una fila `(cuit_normalizado, fecha)` con features,
-disponibilidad y elegibilidad. **Score previsto:** `(cuit_normalizado, fecha,
+**Matriz implementada:** una fila `(cuit_normalizado, fecha)` con seis features,
+contexto, split, disponibilidad, elegibilidad y motivos de ausencia. **Score previsto:** `(cuit_normalizado, fecha,
 version_modelo)` con score y factores descriptivos de la señal; revisar la
 estrategia de explicación del modelo antes de afirmar contribuciones causales.
 
@@ -257,19 +274,27 @@ estrategia de explicación del modelo antes de afirmar contribuciones causales.
 | Features → baseline | Diccionario de fórmulas, cutoff y elegibilidad; tests de lags, huecos y joins sin multiplicación. |
 | Baseline → modelo | Target/constructo definido; cobertura suficiente por grupo; protocolo de splits fijado. |
 | Modelo → score | Comparación fuera de muestra; estabilidad y calibración reproducibles; limitaciones visibles. |
-| Score → web | Consumo del artefacto versionado, explicación y tratamiento de casos no elegibles. |
+| Score → web / observabilidad | Consumo del artefacto versionado, explicación y tratamiento de casos no elegibles; ICC se consume internamente con trazabilidad y doble clic, sin mostrar su puntaje al usuario final. |
+| ICC particulares → global | Constructo común, escalas y pesos justificados, control de solapamientos, cobertura y descomposición reconciliada; fórmula global aprobada antes de evaluar resultados. |
+| ICC → señales operativas | Valor añadido frente a variables directas, reglas predefinidas, calidad/disponibilidad verificadas y evaluación prospectiva separada. |
 
 ## Orden práctico
 
-La matriz y el baseline **ICC** ya están preparados con A para el agregado
-hipotecario ML PH. Antes de PCA/modelos, revisar causa de extremos, arrastres de
-la fuente, poblaciones distintas, saturación y evaluación expansiva, conservando
-un test realmente no inspeccionado. No presentar estas referencias como índice
-nacional ni recalibrar sobre el bloque retrospectivo ya expuesto. En paralelo, seguir acumulando snapshots B. Después preparar **IEF** sobre el
-panel ya disponible, empezando por baseline y anomalías. En IAP, empezar por el
-baseline de pares y la auditoría de repeticiones/cobertura; avanzar a regresión
-cuando su protocolo de evaluación sea viable. Ninguna fuente adicional se
-incorpora sin una feature y un consumidor definidos.
+1. Reproducir el piloto hipotecario, revisar sus componentes, episodios y flags,
+   y definir qué información consumirá internamente la observabilidad.
+2. Evaluar las demás series y aprobar el alcance, dimensiones y elegibilidad de
+   cada índice particular. Construir y validar los particulares por etapas.
+3. Formalizar el ICC global con agregación, pesos, cobertura y descomposición
+   explícitos; no extender el nombre nacional a partir del piloto hipotecario.
+4. Implementar el recorrido global → particulares → dimensiones → series y
+   contrastar la utilidad descriptiva frente a observar variables por separado.
+5. Conservar los rechazos PCA/FA y el diagnóstico PCA2 como evidencia. Cualquier
+   reformulación requiere nueva versión, criterios previos y evidencia adicional.
+6. Acumular datos prospectivos y trazabilidad de revisiones antes de habilitar
+   señales operativas. Seguir preparando B para IAP y C ajustada para IEF cuando
+   se aborden esos índices.
+
+Ninguna fuente adicional se incorpora sin una feature y consumidor definidos.
 
 ## Fuentes técnicas
 

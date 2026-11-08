@@ -1,0 +1,744 @@
+{
+  "config": {
+    "adopcion_local": "2026-10-06",
+    "comparacion": "exploratoria: validacion ya utilizada en PCA",
+    "config_baseline": {
+      "adopcion_local": "2026-10-06",
+      "cargas_l1_min": [
+        0.2,
+        0.2,
+        0.1
+      ],
+      "cortes": {
+        "evaluacion_retrospectiva": [
+          "2024-01-31",
+          "2026-06-30"
+        ],
+        "train": [
+          "2016-08-31",
+          "2022-02-28"
+        ],
+        "validacion": [
+          "2022-03-31",
+          "2023-12-31"
+        ]
+      },
+      "coseno_min": 0.95,
+      "cuantiles": "linear",
+      "divisor_iqr": 1.349,
+      "empeoramiento_columna_max": 0.25,
+      "features": [
+        "credito_stock_real_millones_ars_dic2016",
+        "credito_var_real_3m_pct",
+        "tasa_hipotecaria_nominal_pct"
+      ],
+      "mejora_mse_min": 0.1,
+      "metodo": "S1",
+      "min_train": 60,
+      "min_validacion": 18,
+      "perturbacion": [
+        0.9,
+        1.1
+      ],
+      "peso_costo": 0.8,
+      "peso_momentum": 0.2,
+      "piso_crecimiento_pp": 0.5,
+      "piso_delta_stock": 1.0,
+      "piso_factor": 1e-06,
+      "piso_std": 1e-12,
+      "piso_tasa_pp": 0.1,
+      "prospectivos_operacion_min": 12,
+      "protocolo": "3.1",
+      "saturacion_latente_max": 0.1,
+      "sensibilidad_mae_max": 10.0,
+      "sensibilidad_rho_min": 0.9,
+      "tolerancia_economica": 1e-09,
+      "version": "4.0"
+    },
+    "convergencia": "sin ConvergenceWarning; parámetros finitos, psi>0, factor variable",
+    "mapping": "100*V*logistica((f-mediana_train_f)/escala_train_f)",
+    "max_iter": 1000,
+    "metodo": "factor_analysis",
+    "min_l1_cargas": [
+      0.2,
+      0.2,
+      0.1
+    ],
+    "min_l1_pesos_score": [
+      0.2,
+      0.2,
+      0.1
+    ],
+    "n_components": 1,
+    "noise_variance_init": null,
+    "orientacion": "un signo global: costo positivo",
+    "perturbacion_coseno": "pesos efectivos en Z original: D*w_perturbado",
+    "rotation": null,
+    "svd_method": "lapack",
+    "tol": 0.01,
+    "version": "4.1"
+  },
+  "controles": {
+    "cobertura": {
+      "n_train": 60,
+      "n_validacion": 22,
+      "pasa": true
+    },
+    "convergencia_factor": {
+      "advertencias": [],
+      "n_iter": 37,
+      "pasa": true
+    },
+    "direccion_factor": {
+      "cargas_generativas": {
+        "cargas": [
+          0.5188106229766047,
+          0.949802788763709,
+          0.527064439772058
+        ],
+        "minimos_l1": [
+          0.2,
+          0.2,
+          0.1
+        ],
+        "participaciones_l1": [
+          0.2599671197350002,
+          0.4759299142614255,
+          0.2641029660035742
+        ],
+        "pasa": true
+      },
+      "pasa": false,
+      "pesos_efectivos_score": {
+        "cargas": [
+          0.0657160839706791,
+          0.8820299865461875,
+          0.0675618426180282
+        ],
+        "minimos_l1": [
+          0.2,
+          0.2,
+          0.1
+        ],
+        "participaciones_l1": [
+          0.06472527508209029,
+          0.8687315199019828,
+          0.06654320501592689
+        ],
+        "pasa": false
+      }
+    },
+    "economia_baseline": {
+      "n_escenarios": 96,
+      "naturaleza": "inputs independientes; g fijo al variar R",
+      "pasa": true,
+      "tolerancia": 1e-09,
+      "violaciones": {
+        "bajo_volumen": 0,
+        "cero_volumen": 0,
+        "mejora_estricta_tasa": 0,
+        "momentum_monotono": 0,
+        "rango": 0,
+        "tasa_monotona": 0,
+        "volumen_monotono": 0
+      }
+    },
+    "economia_factor": {
+      "n_escenarios": 96,
+      "naturaleza": "inputs independientes; g fijo al variar R",
+      "pasa": true,
+      "tolerancia": 1e-09,
+      "violaciones": {
+        "bajo_volumen": 0,
+        "cero_volumen": 0,
+        "mejora_estricta_tasa": 0,
+        "momentum_monotono": 0,
+        "rango": 0,
+        "tasa_monotona": 0,
+        "volumen_monotono": 0
+      }
+    },
+    "perturbaciones_factor": {
+      "casos": [
+        {
+          "cargas_original_z": [
+            0.5186053314543435,
+            0.9506197345671953,
+            0.5268447031368722
+          ],
+          "columna": "volumen",
+          "convergio": true,
+          "coseno": 0.9999982329746328,
+          "direccion_admisible": false,
+          "multiplicador": 0.9,
+          "pasa": false,
+          "pesos_score_original_z": [
+            0.06468634065142767,
+            0.8839106707384407,
+            0.06649972697105894
+          ],
+          "spearman_val": 1.0
+        },
+        {
+          "cargas_original_z": [
+            0.5187994817027594,
+            0.9498472144090407,
+            0.5270525105429006
+          ],
+          "columna": "volumen",
+          "convergio": true,
+          "coseno": 0.9999999947616312,
+          "direccion_admisible": false,
+          "multiplicador": 1.1,
+          "pasa": false,
+          "pesos_score_original_z": [
+            0.0656601230511728,
+            0.8821322223997676,
+            0.06750411884220364
+          ],
+          "spearman_val": 1.0
+        },
+        {
+          "cargas_original_z": [
+            0.5186368456574617,
+            0.9504945514293249,
+            0.526878424701067
+          ],
+          "columna": "costo",
+          "convergio": true,
+          "coseno": 0.9999987325104075,
+          "direccion_admisible": false,
+          "multiplicador": 0.9,
+          "pasa": false,
+          "pesos_score_original_z": [
+            0.06484422389732872,
+            0.8836223967697024,
+            0.06666256458154839
+          ],
+          "spearman_val": 1.0
+        },
+        {
+          "cargas_original_z": [
+            0.5187431109087772,
+            0.9500718338123254,
+            0.5269921600728877
+          ],
+          "columna": "costo",
+          "convergio": true,
+          "coseno": 0.9999998080151388,
+          "direccion_admisible": false,
+          "multiplicador": 1.1,
+          "pasa": false,
+          "pesos_score_original_z": [
+            0.06537711577542009,
+            0.8826491981051061,
+            0.06721220274698157
+          ],
+          "spearman_val": 1.0
+        },
+        {
+          "cargas_original_z": [
+            0.5186048640481944,
+            0.9506215906208896,
+            0.526844203019362
+          ],
+          "columna": "momentum",
+          "convergio": true,
+          "coseno": 0.9999982249468905,
+          "direccion_admisible": false,
+          "multiplicador": 0.9,
+          "pasa": false,
+          "pesos_score_original_z": [
+            0.06468399951130843,
+            0.8839149451393081,
+            0.06649731239069352
+          ],
+          "spearman_val": 1.0
+        },
+        {
+          "cargas_original_z": [
+            0.5188006359917371,
+            0.9498426121807297,
+            0.527053746446306
+          ],
+          "columna": "momentum",
+          "convergio": true,
+          "coseno": 0.9999999957906791,
+          "direccion_admisible": false,
+          "multiplicador": 1.1,
+          "pasa": false,
+          "pesos_score_original_z": [
+            0.06566592046031709,
+            0.8821216311905672,
+            0.06751009885951355
+          ],
+          "spearman_val": 1.0
+        }
+      ],
+      "nota": "FA estima ruido por variable: cambios de escala pueden ser absorbidos; este control no prueba estabilidad temporal.",
+      "pasa": false
+    },
+    "reconstruccion": {
+      "coeficientes_comparador_train": [
+        [
+          -1.4489190732128927,
+          -1.6612703193392564,
+          -0.9088916578689822
+        ],
+        [
+          0.05993868630253088,
+          0.06872320364572243,
+          0.03759890595076156
+        ]
+      ],
+      "interpretacion": "reconstruccion de inputs estandarizados; no accuracy economica",
+      "metricas": {
+        "bloques_validacion_descriptivos": [
+          {
+            "desde": "2022-03-31",
+            "hasta": "2023-01-31",
+            "mejora_relativa": 0.1442727406549732,
+            "mse_baseline": 0.8093764005019262,
+            "mse_baseline_por_columna": [
+              2.0769111119839225,
+              0.3111172514623834,
+              0.04010083805947271
+            ],
+            "mse_factor": 0.692605448980056,
+            "mse_factor_por_columna": [
+              1.9381800015725097,
+              0.05396276995536304,
+              0.08567357541229512
+            ],
+            "n": 11,
+            "pasa": false,
+            "ratios_por_columna": [
+              0.9332031546218206,
+              0.17344833724814382,
+              2.1364534897059864
+            ]
+          },
+          {
+            "desde": "2023-02-28",
+            "hasta": "2023-12-31",
+            "mejora_relativa": 0.38498432765680035,
+            "mse_baseline": 1.9694853256882123,
+            "mse_baseline_por_columna": [
+              1.635960051569785,
+              4.184781680822019,
+              0.08771424467283279
+            ],
+            "mse_factor": 1.2112643417482014,
+            "mse_factor_por_columna": [
+              2.5152617797010373,
+              0.24181505288256996,
+              0.8767161926609972
+            ],
+            "n": 11,
+            "pasa": false,
+            "ratios_por_columna": [
+              1.5374836184340313,
+              0.05778438908551858,
+              9.995140423668692
+            ]
+          }
+        ],
+        "train": {
+          "mejora_relativa": -0.060247292368908134,
+          "mse_baseline": 0.4454344992852848,
+          "mse_baseline_por_columna": [
+            0.3856564567389484,
+            0.19238634883396957,
+            0.7582606922829365
+          ],
+          "mse_factor": 0.4722707217949235,
+          "mse_factor_por_columna": [
+            0.7059265704503835,
+            0.01439034923889521,
+            0.6964952456954918
+          ],
+          "n": 60,
+          "pasa": false,
+          "ratios_por_columna": [
+            1.830454431956332,
+            0.07479922211795888,
+            0.9185432566714172
+          ]
+        },
+        "validacion": {
+          "mejora_relativa": 0.31487422609598803,
+          "mse_baseline": 1.3894308630950694,
+          "mse_baseline_por_columna": [
+            1.8564355817768539,
+            2.2479494661422015,
+            0.06390754136615275
+          ],
+          "mse_factor": 0.9519348953641287,
+          "mse_factor_por_columna": [
+            2.2267208906367735,
+            0.1478889114189665,
+            0.4811948840366462
+          ],
+          "n": 22,
+          "pasa": false,
+          "ratios_por_columna": [
+            1.1994603596778228,
+            0.06578836119157284,
+            7.529547745854932
+          ]
+        }
+      },
+      "pasa": false
+    },
+    "saturacion": {
+      "fraccion_componentes": {
+        "C": 0.18181818181818182,
+        "M": 0.0,
+        "V": 0.0
+      },
+      "fraccion_latente": 0.09090909090909091,
+      "meses_latente": 2,
+      "n_validacion": 22,
+      "pasa": true
+    },
+    "sensibilidad_baseline": {
+      "pasa": true,
+      "regla": "rho>=0.90 y MAE<=10 en train y validacion; no elegir ganador",
+      "variantes": [
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 1.9445202564109754,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9943873298138373
+            },
+            "validacion": {
+              "mae": 3.154180073030695,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9717673630717111
+            }
+          },
+          "pasa": true,
+          "valor": 0.0,
+          "variante": "peso_momentum"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 0.9722601282054887,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9984440122256185
+            },
+            "validacion": {
+              "mae": 1.577090036515346,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9943534726143423
+            }
+          },
+          "pasa": true,
+          "valor": 0.3,
+          "variante": "peso_momentum"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 3.1807644593219675,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9989997221450404
+            },
+            "validacion": {
+              "mae": 1.2979008547766804,
+              "n": 22,
+              "pasa": true,
+              "spearman": 1.0
+            }
+          },
+          "pasa": true,
+          "valor": 0.75,
+          "variante": "R0"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 2.4961441763526975,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9994998610725202
+            },
+            "validacion": {
+              "mae": 1.049476006752421,
+              "n": 22,
+              "pasa": true,
+              "spearman": 1.0
+            }
+          },
+          "pasa": true,
+          "valor": 1.25,
+          "variante": "R0"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 1.7401239163302935,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9982772992497918
+            },
+            "validacion": {
+              "mae": 1.5288369850149572,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9672501411631848
+            }
+          },
+          "pasa": true,
+          "valor": 0.75,
+          "variante": "escalas"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 1.2597106632758326,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9989997221450404
+            },
+            "validacion": {
+              "mae": 1.4023439981729864,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9966120835686054
+            }
+          },
+          "pasa": true,
+          "valor": 1.25,
+          "variante": "escalas"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 0.6372576543122894,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.997499305362601
+            },
+            "validacion": {
+              "mae": 0.8222472522445531,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9243365330321853
+            }
+          },
+          "escala_train": 5.0320765216603975,
+          "pasa": true,
+          "variante": "crecimiento_mensual"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 0.4494114218568333,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9984995832175608
+            },
+            "validacion": {
+              "mae": 0.5693006539302398,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9819311123658953
+            }
+          },
+          "escala_train": 1349.0130334783187,
+          "pasa": true,
+          "variante": "delta_stock_3m"
+        },
+        {
+          "comparaciones": {
+            "train": {
+              "mae": 1.6771453698975418,
+              "n": 60,
+              "pasa": true,
+              "spearman": 0.9896637954987497
+            },
+            "validacion": {
+              "mae": 1.2990810127284083,
+              "n": 22,
+              "pasa": true,
+              "spearman": 0.9130434782608697
+            }
+          },
+          "escala_train": 5.148257968865826,
+          "pasa": true,
+          "variante": "cambio_tasa"
+        }
+      ]
+    },
+    "variacion_factor": {
+      "pasa": true,
+      "std_y_train": [
+        0.19794665573105977,
+        14.070192657411152,
+        0.7090475312565195
+      ]
+    }
+  },
+  "fuente": {
+    "experimento": "hipotecarios_empresariales_0.1",
+    "fuentes_reconstruidas": true,
+    "hashes_codigo": {
+      "evaluar_hipotecarios.py": "f129bafd41be543b9e03b79b43d020823bf023c75e03c25d0c76adfda197ca74",
+      "validar_empresariales.py": "beb5d7857c0e0711d2670bd11d9803f8f7b34448adf106e8810d9d7b054d98b1"
+    },
+    "hashes_fuentes": {
+      "deflactor_ipc.csv": "d5742b68e6c762e6d53b2daf01c4c309ae5f6766824aac43f1641dbd38baf8f6",
+      "observaciones_api.csv": "bcf2f82af4b3ad0fc4a911feac67a2f65b1bf5900afd755336899d2b0b5b5e3e",
+      "perser_priv.xls": "ad0f0cdad0f9136ceb23a8c9083a0b12278661c71a5017337dd5e1073e64dd15",
+      "preser_tas.xls": "d66658fbf285e046f1a11497621731851215349b3a33bffb57f1d44610f388f0"
+    }
+  },
+  "modelo_admitido_para_icc": false,
+  "parametros": {
+    "advertencias": [],
+    "algoritmo": "factor_analysis",
+    "cargas": [
+      0.5188106229766047,
+      0.949802788763709,
+      0.527064439772058
+    ],
+    "centro_factor": [
+      -6.420789825748822e-16,
+      -4.255854927729767e-16,
+      -5.3660779523549233e-17
+    ],
+    "comunalidades": [
+      0.26922990793254065,
+      0.9005243742682416,
+      0.27787042976126347
+    ],
+    "convergio": true,
+    "f0": 0.33051847482535557,
+    "grados_libertad_covarianza": 0,
+    "loglike_final": -237.92411341953675,
+    "max_iter": 1000,
+    "media_y_train": [
+      0.7060727175133159,
+      -33.604499999999994,
+      -0.002870683208229539
+    ],
+    "n_components": 1,
+    "n_iter": 37,
+    "pesos_score": [
+      0.0657160839706791,
+      0.8820299865461875,
+      0.0675618426180282
+    ],
+    "rotation": null,
+    "sf": 0.8831640140762533,
+    "std_y_train": [
+      0.19794665573105977,
+      14.070192657411152,
+      0.7090475312565195
+    ],
+    "svd_method": "lapack",
+    "tol": 0.01,
+    "varianza_propia": [
+      0.7305924537234953,
+      0.09965247471898464,
+      0.7219385426417126
+    ]
+  },
+  "referencias": {
+    "R0": 9771.56058763204,
+    "fechas_train": [
+      "2017-03-31",
+      "2017-04-30",
+      "2017-05-31",
+      "2017-06-30",
+      "2017-07-31",
+      "2017-08-31",
+      "2017-09-30",
+      "2017-10-31",
+      "2017-11-30",
+      "2017-12-31",
+      "2018-01-31",
+      "2018-02-28",
+      "2018-03-31",
+      "2018-04-30",
+      "2018-05-31",
+      "2018-06-30",
+      "2018-07-31",
+      "2018-08-31",
+      "2018-09-30",
+      "2018-10-31",
+      "2018-11-30",
+      "2018-12-31",
+      "2019-01-31",
+      "2019-02-28",
+      "2019-03-31",
+      "2019-04-30",
+      "2019-05-31",
+      "2019-06-30",
+      "2019-07-31",
+      "2019-08-31",
+      "2019-09-30",
+      "2019-10-31",
+      "2019-11-30",
+      "2019-12-31",
+      "2020-01-31",
+      "2020-02-29",
+      "2020-03-31",
+      "2020-04-30",
+      "2020-05-31",
+      "2020-06-30",
+      "2020-07-31",
+      "2020-08-31",
+      "2020-09-30",
+      "2020-10-31",
+      "2020-11-30",
+      "2020-12-31",
+      "2021-01-31",
+      "2021-02-28",
+      "2021-03-31",
+      "2021-04-30",
+      "2021-05-31",
+      "2021-06-30",
+      "2021-07-31",
+      "2021-08-31",
+      "2021-09-30",
+      "2021-10-31",
+      "2021-11-30",
+      "2021-12-31",
+      "2022-01-31",
+      "2022-02-28"
+    ],
+    "metodo": "S1",
+    "n_train": 60,
+    "r0": 30.035,
+    "rangos_train": {
+      "credito_stock_real_millones_ars_dic2016": [
+        4913.706858830475,
+        16147.78325517887
+      ],
+      "credito_var_real_3m_pct": [
+        -16.371910797971513,
+        30.75174865818404
+      ],
+      "tasa_hipotecaria_nominal_pct": [
+        15.81,
+        72.84
+      ]
+    },
+    "sg": 16.789781272467796,
+    "sr": 11.495552260934028,
+    "train_sha256": "2ed7f7d89b90fdb67e1368b4b94cfa058693d81272d0c3081c456fe55bfbc12c",
+    "version": "4.0"
+  },
+  "serie_stock": 935,
+  "tasa": "nominal ML fija/repactable por titular, no UVA",
+  "uso": "diagnóstico exploratorio; equivalencia de modalidad/población pendiente"
+}

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Base A — extracción + transformación en un único script.
 
-Secciones: 1) configuración/imports; 2) extracción BCRA y staging;
-3) transformación analítica; 4) CLI del pipeline.
+Secciones: 1) configuración/imports; 2) extracción BCRA, IPC INDEC,
+auditoría de unidades y staging; 3) transformación nominal/constante;
+4) CLI del pipeline.
 Default: descargar, validar y transformar. --offline: transformar datos guardados.
 Salidas fuente: data_a/. Salidas analíticas: data_analytics/runs/<id>/base_a/.
 Ejemplos: python base_a.py
@@ -12,20 +13,38 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
+import io
 import json
+import re
+import shutil
+import tempfile
 import time
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import requests
 
-from lib.common import read_csv, require_unique, write_csv, build_analytical_run
+from lib.common import read_csv, require_unique, write_csv, build_analytical_run, remove_tree
+from lib.precios import (BASE_IPC, validar_ipc, cargar_ipc, ajustar_montos,
+                        resumen_ajuste, sha256)
 import numpy as np
 
 BASE_URL = "https://api.bcra.gob.ar"
 TIMEOUT = (10, 30)
+IPC_URL = 'https://www.indec.gob.ar/ftp/cuadros/economia/serie_ipc_divisiones.csv'
+IPC_METADATA_URL = 'https://www.indec.gob.ar/ftp/cuadros/economia/serie_ipc_metadatos.txt'
+UNIDADES_URL = 'https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/'
+# Hoja/columna oficial: stocks ML de PH para ICC. El XLS está en miles de ARS;
+# los valores de la API coinciden con XLS/1000 redondeado: millones de ARS.
+UNIDADES_ICC = {927: ('perser_priv.xls', 'Prest-Hip', 17),
+                1145: ('perser_dest.xls', 'fis', 22),
+                1146: ('perser_dest.xls', 'fis', 23),
+                1147: ('perser_dest.xls', 'fis', 25),
+                1148: ('perser_dest.xls', 'fis', 26),
+                1149: ('perser_dest.xls', 'fis', 29)}
 
 # Seleccion definitiva de Base A. Las series derivables y los agregados MEyML
 # no se ingieren.
@@ -449,27 +468,200 @@ def extract_base_a(out, desde=None, hasta=None):
     if not monetary_complete or not summary_df.loc[required, 'ok'].all():
         raise SystemExit('Extracción A incompleta; revisar logs antes de transformar.')
 
+# 2.2. FUENTE OFICIAL IPC: PUBLICACIÓN ORIGINAL + NORMALIZACIÓN VERSIONADA
+
+def publicar_version(folder, version, files, metadata):
+    """Conservar versiones inmutables y mover el puntero al final de la ingesta."""
+    folder = Path(folder)
+    versions = folder / 'versions'
+    versions.mkdir(parents=True, exist_ok=True)
+    destination = versions / version
+    metadata = {**metadata, 'version_fuente': version,
+                'files_sha256': {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}}
+    if destination.exists():
+        previous = json.loads((destination / 'metadata.json').read_text(encoding='utf-8'))
+        if previous['files_sha256'] != metadata['files_sha256']:
+            raise ValueError('Intento de cambiar una versión inmutable de fuente.')
+        for name, digest in previous['files_sha256'].items():
+            if sha256(destination / name) != digest:
+                raise ValueError(f'Versión fuente alterada: {name}')
+    else:
+        with tempfile.TemporaryDirectory(prefix='version_stage_', dir=folder) as tmp:
+            stage = Path(tmp) / version
+            stage.mkdir()
+            for name, data in files.items():
+                (stage / name).write_bytes(data)
+            (stage / 'metadata.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding='utf-8')
+            stage.replace(destination)
+    pointer = folder / 'latest.json.tmp'
+    pointer.write_text(json.dumps({'version_fuente': version}, indent=2), encoding='utf-8')
+    pointer.replace(folder / 'latest.json')
+    return destination
+
+
+def parsear_ipc(raw, raw_metadata):
+    """Seleccionar niveles nacionales; no encadenar variaciones redondeadas."""
+    metadata_text = raw_metadata.decode('utf-8-sig')
+    if 'Diciembre 2016=100' not in metadata_text or 'Indice_IPC:' not in metadata_text:
+        raise ValueError('INDEC: cambiaron los metadatos o la base del IPC.')
+    try:
+        text = raw.decode('utf-8-sig')
+    except UnicodeDecodeError:
+        text = raw.decode('latin-1')
+    source = pd.read_csv(io.StringIO(text), sep=';', dtype='string')
+    required = {'Codigo', 'Descripcion', 'Clasificador', 'Periodo', 'Indice_IPC', 'Region'}
+    if not required.issubset(source.columns):
+        raise ValueError('INDEC: columnas desconocidas en publicación IPC.')
+    selected = source.loc[source.Codigo.eq('0') & source.Region.eq('Nacional')].copy()
+    if selected.empty or not selected.Descripcion.eq('NIVEL GENERAL').all():
+        raise ValueError('INDEC: no se encontró nivel general nacional.')
+    if not selected.Periodo.str.fullmatch(r'\d{6}').all():
+        raise ValueError('INDEC: período IPC inválido.')
+    dates = pd.to_datetime(selected.Periodo, format='%Y%m', errors='raise') + pd.offsets.MonthEnd(0)
+    levels = pd.to_numeric(selected.Indice_IPC.str.replace(',', '.', regex=False), errors='raise')
+    version = hashlib.sha256(raw).hexdigest()
+    table = pd.DataFrame({'fecha_mes': dates.dt.strftime('%Y-%m-%d'), 'ipc_nacional': levels,
+                          'factor_deflacion': 100 / levels, 'periodo_base': BASE_IPC,
+                          'version_fuente': version})
+    return validar_ipc(table)
+
+
+def adquirir_ipc(root):
+    """Descargar original INDEC, validar y conservar la publicación versionada."""
+    with requests.Session() as session:
+        r = session.get(IPC_URL, timeout=TIMEOUT)
+        r.raise_for_status()
+        m = session.get(IPC_METADATA_URL, timeout=TIMEOUT)
+        m.raise_for_status()
+    table = parsear_ipc(r.content, m.content)
+    metadata_text = m.content.decode('utf-8-sig')
+    update = re.search(r'Actualizado al:\s*(\d{2}/\d{2}/\d{4})', metadata_text)
+    publication = datetime.strptime(update.group(1), '%d/%m/%Y').date().isoformat() if update else None
+    metadata = {'fuente': 'INDEC', 'url': IPC_URL, 'url_metadatos': IPC_METADATA_URL,
+                'adquirido_en_utc': datetime.now(timezone.utc).isoformat(),
+                'fecha_actualizacion_fuente': publication, 'periodo_base': BASE_IPC,
+                'desde': table.fecha_mes.iloc[0], 'hasta': table.fecha_mes.iloc[-1],
+                'meses': len(table), 'uso': 'retrospectivo; no reconstruye disponibilidad histórica'}
+    # La versión incluye también los metadatos utilizados: si cambian sin cambiar
+    # el CSV, conservar los anteriores y rechazar la ambigüedad para revisión.
+    files = {'serie_ipc_divisiones.csv': r.content, 'serie_ipc_metadatos.txt': m.content,
+             'ipc_nacional.csv': table.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig')}
+    publicar_version(Path(root) / 'data_a/ipc', table.version_fuente.iloc[0], files, metadata)
+    return metadata
+
+
+# 2.3. EVIDENCIA DE UNIDADES DEL SUBCONJUNTO ICC
+
+def auditar_unidades_icc(root, publicaciones=None):
+    """Contrastar valores API contra XLS oficial; habilitar solo meses probados.
+
+Una diferencia superior al redondeo rechaza la ingesta: puede indicar revisión
+o cambio de escala y requiere resolverlo, no aplicar un factor supuesto.
+publicaciones permite validar el parser con originales oficiales guardados.
+"""
+    h = read_csv(Path(root) / 'data_a/processed/bcra_monetarias_history_long.csv')
+    h['fecha'] = pd.to_datetime(h.fecha, errors='raise').dt.strftime('%Y-%m-%d')
+    files = {}
+    sheets = {}
+    for name in sorted({x[0] for x in UNIDADES_ICC.values()}):
+        if publicaciones is None:
+            response = requests.get(UNIDADES_URL + name, timeout=TIMEOUT)
+            response.raise_for_status()
+            raw = response.content
+        else:
+            raw = publicaciones[name]
+        files[name] = raw
+    records = []
+    for sid, (name, sheet, column) in UNIDADES_ICC.items():
+        if (name, sheet) not in sheets:
+            sheets[name, sheet] = pd.read_excel(io.BytesIO(files[name]), sheet_name=sheet, header=None, engine='xlrd')
+        official = sheets[name, sheet].copy()
+        if 'thousands of pesos' not in str(official.iloc[3, 3]) or 'domestic currency' not in str(official.iloc[5, 16 if sid == 927 else 20]):
+            raise ValueError('BCRA: cambió la unidad o estructura de las tablas oficiales.')
+        official['periodo'] = pd.to_numeric(official[2], errors='coerce').astype('Int64').astype('string')
+        official = official.loc[official.periodo.notna() & official.periodo.str[-2:].between('01', '12')].copy()
+        official['fecha'] = (pd.to_datetime(official.periodo, format='%Y%m', errors='raise') + pd.offsets.MonthEnd(0)).dt.strftime('%Y-%m-%d')
+        subset = h.loc[h.idVariable.eq(sid) & h.fecha.ge('2016-12-31'), ['fecha', 'valor']]
+        check = subset.merge(official[['fecha', column]], on='fecha', validate='one_to_one')
+        if check.empty:
+            raise ValueError(f'No hay meses comparables para auditar escala de {sid}.')
+        official_millions = pd.to_numeric(check[column], errors='raise') / 1000
+        differences = pd.to_numeric(check.valor, errors='raise') - official_millions
+        if not np.isfinite(official_millions).all() or differences.abs().gt(0.500001).any():
+            raise ValueError(f'Escala/revisión {sid}: API no coincide con XLS/1000 redondeado; revisar fuentes.')
+        records.extend({'serie_id': sid, 'fecha': row.fecha, 'valor_api': float(row.valor),
+                        'unidad_validada': 'millones_ARS', 'valor_xls_miles_ars': float(value)}
+                       for row, value in zip(check.itertuples(index=False), check[column]))
+    certificate = json.dumps(records, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
+    files['contraste.json'] = certificate
+    version = hashlib.sha256(b''.join(files[k] for k in sorted(files))).hexdigest()
+    metadata = {'adquirido_en_utc': datetime.now(timezone.utc).isoformat(),
+                'fuentes': {name: UNIDADES_URL + name for name in files if name.endswith('.xls')},
+                'filas_contrastadas': len(records), 'unidad_validada': 'millones_ARS',
+                'criterio': 'API = XLS en miles de ARS / 1000, tolerancia de redondeo 0.500001',
+                'advertencia': 'unidad declarada por API miles de ARS contradice escala contrastada'}
+    publicar_version(Path(root) / 'data_a/unidades_icc', version, files, metadata)
+    return metadata
+
+
+def unidades_icc_validadas(root, observations):
+    """No extender la certificación a meses/valores que no fueron contrastados."""
+    folder = Path(root) / 'data_a/unidades_icc'
+    if not (folder / 'latest.json').exists():
+        return pd.Series(False, index=observations.index), {'estado': 'sin_contraste_oficial'}
+    version = json.loads((folder / 'latest.json').read_text(encoding='utf-8'))['version_fuente']
+    if not re.fullmatch(r'[0-9a-f]{64}', str(version)):
+        raise ValueError('Unidades ICC: versión inválida.')
+    location = folder / 'versions' / version
+    metadata = json.loads((location / 'metadata.json').read_text(encoding='utf-8'))
+    for name, digest in metadata['files_sha256'].items():
+        if Path(name).name != name or sha256(location / name) != digest:
+            raise ValueError('Unidades ICC: evidencia original alterada.')
+    evidence = pd.DataFrame(json.loads((location / 'contraste.json').read_text(encoding='utf-8')))
+    require_unique(evidence, ['serie_id', 'fecha'], 'Contraste oficial ICC')
+    lookup = evidence.set_index(['serie_id', 'fecha']).valor_api
+    keys = pd.MultiIndex.from_frame(observations[['serie_id', 'fecha']])
+    values = pd.Series(lookup.reindex(keys).to_numpy(), index=observations.index)
+    # Exactitud respecto de los nominales auditados, sin inferir escala nueva.
+    eligible = values.notna() & observations.valor_original.eq(values)
+    return eligible, {'version_fuente': version, **metadata}
+
+
 def acquire(root, *, out=None, desde=None, hasta=None):
     """Extraer y validar A en staging; publicar el cache sólo al terminar bien."""
-    import tempfile
-    import shutil
     root = Path(root).resolve()
     destination = Path(out) if out is not None else root / 'data_a'
     with tempfile.TemporaryDirectory(prefix='base_a_stage_', dir=root) as tmp:
         staging_root = Path(tmp)
         stage = staging_root / 'data_a'
+        if destination.exists():
+            shutil.copytree(destination, stage)
         extract_base_a(stage, desde=desde, hasta=hasta)
+        adquirir_ipc(staging_root)
+        auditar_unidades_icc(staging_root)
         (staging_root / 'config').mkdir()
         shutil.copy2(root / 'config/catalogo_base_a.csv', staging_root / 'config/catalogo_base_a.csv')
         shutil.copy2(root / 'config/esquema_tablas.json', staging_root / 'config/esquema_tablas.json')
         transform_a(staging_root, staging_root / 'validation')
-        for src in sorted(stage.rglob('*')):
-            if src.is_file():
-                dest = destination / src.relative_to(stage)
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                temp_dest = dest.with_name(dest.name + '.tmp')
-                shutil.copy2(src, temp_dest)
-                temp_dest.replace(dest)
+        # Publicar directorio validado como unidad; restaurar cache previo si
+        # falla el intercambio. Las versiones IPC/unidades previas se conservan.
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        backup = destination.with_name(destination.name + '.backup')
+        if backup.exists():
+            raise ValueError(f'Existe backup de adquisición pendiente de revisión: {backup}')
+        previous = destination.exists()
+        if previous:
+            destination.replace(backup)
+        try:
+            shutil.move(str(stage), str(destination))
+        except Exception:
+            if destination.exists():
+                remove_tree(destination)
+            if previous:
+                backup.replace(destination)
+            raise
+        if previous:
+            remove_tree(backup)
     return None
 
 
@@ -519,8 +711,8 @@ def load_a(root, catalog_path):
             fx_rows.append({'fecha': row.fecha, **item})
     return h.sort_values(['idVariable', 'fecha']), cat, monthly, wide, pd.DataFrame(fx_rows)
 
-def transform_a(root, output):
-    """Dos tablas relacionales para ICC y contexto de IAP/IEF; sin vistas de EDA."""
+def transform_a(root, output, ipc=None):
+    """Hechos nominales/constantes ICC y deflactor compartido; sin vistas de EDA."""
     from lib.relacional import exportar_tablas, fecha_iso
     h, cat = load_a_inputs(root, Path(root) / 'config/catalogo_base_a.csv')
     if h.valor.isna().any() or not np.isfinite(h.valor).all():
@@ -543,10 +735,25 @@ def transform_a(root, output):
         columns={'idVariable':'serie_id','valor':'valor_original','valor_eda':'valor_analitico',
                  'excepcion_1199_precobertura':'excepcion_precobertura'}).copy()
     observations['fecha'] = fecha_iso(observations.fecha)
+    if ipc is None:
+        ipc, _ = cargar_ipc(root)
+    if not set(cat.loc[cat.ajuste_ipc, 'serie_id']).issubset(UNIDADES_ICC):
+        raise ValueError('Ajuste IPC: serie sin criterio/evidencia implementados.')
+    selected = cat.loc[cat.ajuste_ipc]
+    if not (selected.tipo_valor.eq('stock_nominal') & selected.frecuencia.eq('M') &
+            selected.moneda.eq('ML') & selected.unidad_validada.eq('millones_ARS') &
+            selected.consumidor_ajuste.eq('ICC')).all():
+        raise ValueError('Ajuste IPC: unidad, frecuencia, moneda o consumidor incompatible.')
+    decision = observations.serie_id.map(cat.set_index('serie_id').ajuste_ipc).fillna(False)
+    eligible, unit_metadata = unidades_icc_validadas(root, observations)
+    observations = ajustar_montos(observations, {'valor_analitico': 'valor_constante_dic2016'},
+                                  ipc, elegible=eligible & decision, no_aplica=~decision)
     validation = exportar_tablas(root, 'a', {'series':cat.rename(columns={'rol_eda':'rol_analitico'}),
-                                           'observaciones':observations}, output)
+                                           'observaciones':observations,
+                                           'deflactor_ipc':ipc}, output)
     return {'observaciones':len(h),'series':len(cat),'excepciones_1199':int(h.excepcion_1199_precobertura.sum()),
             'hasta':h.fecha.max().isoformat(),'stocks_escala_pendiente':int(cat.validacion_escala.eq('pendiente_escala_absoluta').sum()),
+            'ajuste_ipc':resumen_ajuste(observations), 'contraste_unidades':unit_metadata,
             'relacional':validation}
 
 # -----------------------------------------------------------------------------
@@ -563,11 +770,21 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--offline', action='store_true', help='Transformar datos guardados, sin llamadas BCRA.')
     mode.add_argument('--extract-only', action='store_true', help='Sólo extraer; útil para diagnóstico/smoke test.')
+    mode.add_argument('--ipc-only', action='store_true',
+                      help='Adquirir/validar solo IPC nacional INDEC; no vuelve a descargar BCRA.')
+    mode.add_argument('--audit-units-only', action='store_true',
+                      help='Contrastar stocks ICC guardados contra tablas oficiales BCRA.')
     parser.add_argument('--out', type=Path, default=None, help='Salida fuente A; default PROJECT_ROOT/data_a.')
     parser.add_argument('--desde', default=None, help='Fecha inicial opcional para la descarga.')
     parser.add_argument('--hasta', default=None, help='Fecha final de descarga; default hoy.')
     args = parser.parse_args()
     root = args.project_root.resolve()
+    if args.ipc_only or args.audit_units_only:
+        if args.out is not None or args.desde is not None or args.hasta is not None:
+            parser.error('Las ingestas de IPC/unidades usan PROJECT_ROOT sin --out/--desde/--hasta.')
+        result = adquirir_ipc(root) if args.ipc_only else auditar_unidades_icc(root)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return
     if args.out is not None and args.out.resolve() != root / 'data_a' and not args.extract_only:
         parser.error('Para una salida fuente personalizada usar --extract-only; para otro proyecto usar --project-root.')
     options = {'out': args.out, 'desde': args.desde, 'hasta': args.hasta}

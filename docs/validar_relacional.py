@@ -29,7 +29,7 @@ class Relacional(unittest.TestCase):
     def test_contrato_completo(self):
         for base in self.schema:
             validar_tablas(self.tables[base], self.schema[base])
-        self.assertEqual(sum(len(x) for x in self.tables.values()), 12)
+        self.assertEqual(sum(len(x) for x in self.tables.values()), 13)
 
     def test_pk_duplicada_se_rechaza(self):
         tables = self.tables['a'].copy()

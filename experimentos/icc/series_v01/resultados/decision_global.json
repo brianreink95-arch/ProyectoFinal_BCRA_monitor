@@ -1,0 +1,12 @@
+{
+  "estado": "no_calculado",
+  "formula_aprobada": false,
+  "pesos_aprobados": false,
+  "razones": [
+    "Escalas de referencia propias sin equivalencia demostrada",
+    "ML real y ME nominal USD no tienen un constructo global validado",
+    "Stocks medios de consumo y saldos de cierre de titulares no son una partición homogénea",
+    "Totales por titular solapan subproductos; residuales total/ML/ME no forzados",
+    "Quedan adelantos, documentos y otras líneas fuera de particulares construidos"
+  ]
+}

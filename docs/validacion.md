@@ -1,121 +1,175 @@
-# Validación del diseño relacional — 4 de octubre de 2026 (Buenos Aires)
+# Validación del proyecto depurado
 
-La última consolidación completa se ejecutó sin red y exportó exactamente las
-12 tablas del contrato: 2 A, 3 B y 7 C. Se validaron 12 claves primarias, 9
-relaciones foráneas, tipos y nulabilidad; ninguna tabla tiene referencias huérfanas.
+Verificación realizada el 21 de octubre de 2026, Buenos Aires.
+La limpieza retiró archivos sustituidos y duplicados, compartió código e
+insumos empresariales y conservó las decisiones metodológicas vigentes.
 
-- Los 332 archivos de fuentes originales conservan su SHA-256.
-- A conserva 65 series y 41.687 observaciones, iguales en valor original y
-  analítico a la entrega previa; la excepción 1199 permanece explícita.
-- B conserva 46.586 observaciones de 13 capturas completas y los mismos valores
-  TEA/CFTEA. Su observacion_id es reproducible y único; la captura incompleta
-  permanece en snapshots sin ofertas.
-- C conserva 100 CUIT, 102 pertenencias, 28.968 empresa-acreedor-mes y 2.400
-  empresa-mes. Las métricas compartidas del panel coinciden con la entrega previa.
-  Los saldos agregados reconcilian con el detalle positivo.
-- Seis pruebas semánticas C y ocho pruebas relacionales aprobadas. Se verifica
-  rechazo de PK duplicada, FK huérfana, fecha inválida y booleano desconocido.
-- La adquisición A se simuló con datos guardados y el nuevo contrato en staging.
-- La nueva adquisición C se simuló con las respuestas guardadas de las 100
-  empresas: produce solo cuatro CSV de insumos, sin target, paneles exploratorios
-  ni bundle ZIP. La transformación produce siete tablas y los mismos hechos.
-- Sintaxis de scripts y cuatro notebooks comprobada; las cuatro CLI responden
-  a --help. La carga real del notebook conjunto mantiene los conteos A/B/C.
-- La exportación CSV escribe temporalmente y verifica encabezado/cantidad de
-  registros antes de publicar cada archivo. El puntero ABC solo cambia al completar.
+## Pruebas de código y datos
 
-No se consultó BCRA en vivo, no se entrenaron modelos y no se reejecutaron todos
-los gráficos. B no cambió su adquisición; sus nuevas tablas se comprobaron con
-las fuentes guardadas. Windows y la instalación en Python 3.14 no se ejecutaron
-en este entorno; las verificaciones usan Python 3.12 y pandas 2.2.3.
+Se aprobaron 207 pruebas, sin omisiones en estas suites:
 
-El informe JSON registra corrida, tablas y conteos. Esta evidencia original
-certifica tablas, no entrenamiento ni scores. La primera matriz de features ICC
-se validó posteriormente, como se detalla al final; los scores siguen sin existir.
+| Conjunto | Pruebas aprobadas |
+| --- | --- |
+| Features, evaluador, S1, FA1, PCA2, inflación, semántica y contrato ABC | 181 |
+| Hipotecarios empresariales 0.1 | 8 |
+| Cierre empresarial 0.2 | 8 |
+| Otras series ICC | 10 |
 
-Repetir desde la raíz:
+Las suites del baseline anterior y de features 2.0 se retiraron por estar
+sustituidas. Las pruebas vigentes cubren el método actual y no dependen de esos
+artefactos nominales históricos.
+
+## Matriz IEF 0.1 — verificación anterior
+
+Se agregaron 20 pruebas para la matriz C a precios constantes. En esta etapa se
+aprobaron 60 pruebas: las 20 nuevas y 40 existentes de inflación, semántica y
+contrato relacional. Las 207 de la depuración corresponden a la verificación
+anterior; el proyecto conserva ahora 227 pruebas distintas comprobadas entre
+ambas etapas. No se reentrenaron los modelos ICC.
 
 ```bash
-python docs/validar_semantica.py
-python docs/validar_relacional.py
+python -m unittest docs.validar_ief docs.validar_inflacion docs.validar_semantica docs.validar_relacional -q
+python ml/ief.py
 ```
 
-## Primera matriz ICC — evidencia posterior
+La matriz conserva 2.400 filas y 100 empresas, sin agregar huecos en esta
+consolidación. Hay 2.047 filas elegibles: train 875, validación 587 y evaluación
+585. El bundle contiene matriz y protocolo; no hay modelo IEF entrenado.
+La reproducción en un destino independiente produce los mismos dos archivos.
+Los hashes de las 342 fuentes y de todas las tablas consolidadas se verificaron
+nuevamente sin diferencias. Las fórmulas, los casos límite y los motivos están
+en `features_ief.md`; el experimento previsto está en `plan_ief.md`.
 
-Implementada en [ml/features.py](../ml/features.py), con diccionario en
-[features_icc.md](features_icc.md). Solo A de la consolidación ABC completa
-`20261005_011327_837742`, sin adquisición online ni modificación de fuentes.
-La matriz representa hipotecarios ML a personas humanas, no un ICC nacional.
+## Tratamiento IEF 0.2 — vigente
 
-- 321 filas mensuales, 1999-12–2026-08, PK única `(fecha_mes, segmento)` y
-  calendario continuo. 119 elegibles consecutivas, 2016-08–2026-06; 202 no
-  elegibles conservadas con motivos por feature.
-- Seis features; cero infinitos. Fórmulas verificadas directamente con los datos
-  de junio de 2026 y mediante casos sintéticos de rezagos, ventanas y denominadores.
-- Los cinco destinos hipotecarios reconcilian con el total en los 319 meses de
-  stock: diferencia máxima 2, dentro de la tolerancia inicial documentada de 3.
-  No certifica la escala absoluta ni habilita sumar otros stocks.
-- 17 pruebas ICC, 6 semánticas y 8 relacionales: **31 aprobadas**. Cubren huecos,
-  ceros, warm-up, PK nulas/duplicadas, fechas, no uso de futuro, rechazo de tablas
-  alteradas/corridas incompletas, catálogo, excepción 1199 y exportación única.
-- CLI ejecutada dos veces con idénticos inputs/código: mismo CSV y SHA-256
-  `c1a517d0150e8997cee50e1d447ef3f8df5271ca833024b9e1033e896ae9db15`.
-- Los 332 hashes de fuentes originales coinciden con `source_sha256` de la
-  consolidación. Las 12 tablas originales y el puntero latest no se reemplazaron.
-- Esta nueva validación sí se ejecutó en **Windows, Python 3.14.6, pandas 2.3.3
-  y NumPy 2.5.3**, a diferencia de la evidencia original de tablas descrita arriba.
-  Sintaxis y diagnósticos del código nuevo sin errores.
+El tratamiento agrega 11 pruebas a las 20 de la matriz: 31 pruebas IEF, más
+40 regresiones existentes, suman 71 pruebas aprobadas en esta etapa. El proyecto
+reúne 238 pruebas distintas verificadas entre la depuración y las etapas IEF;
+no se afirma una nueva ejecución de todas las suites ICC ni de los notebooks.
 
-Salida única: [icc.csv](../data_analytics/features/20261005_011327_837742/icc.csv),
-fuera del contrato de 12 tablas. No hay score productivo, modelo ni PCA; el ajuste posterior de referencias
-empíricas del baseline se documenta en la sección siguiente.
-La disponibilidad histórica sigue sin verificarse: estos controles prueban
-construcción retrospectiva por referencia, no una evaluación point-in-time.
+La razón logarítmica real reemplaza al crecimiento porcentual como predictor del
+primer bosque, conservando el porcentaje original en la matriz. No se imputan,
+recortan, redondean ni eliminan extremos; los otros cinco predictores mantienen
+su definición. La cobertura continúa en 2.047 de 2.400 filas. El detalle por
+acreedor reconcilia con los agregados y los seis extremos seleccionados de train
+coinciden con las capturas originales, con hashes verificados.
+
+Las referencias de diagnóstico usan solo las 875 filas elegibles de train y se
+persisten para aplicación sin refit. Se prueban la invariancia de esas referencias
+ante cambios posteriores, conservación de filas y originales, ceros, simetría del
+logaritmo, estabilidad numérica y detección de incompatibilidad de referencias.
+La bandera de rango train es contexto; ninguna bandera o ID adicional entra al
+modelo. Las fuentes y tablas consolidadas siguen intactas. Se verificó la
+reproducción idéntica de ambos archivos, también desde el ZIP extraído.
+
+En la etapa de tratamiento no se entrenó Isolation Forest. Se documenta la sensibilidad futura con el
+crecimiento porcentual original frente al logarítmico, sin elegir a partir de
+resultados de la evaluación final.
+
+## Baseline IEF 0.1 — vigente
+
+Se agregaron 11 pruebas del baseline: las 42 pruebas IEF y las 40 regresiones de
+inflación, semántica y contrato suman 82 aprobadas en esta etapa. El proyecto
+reúne 249 pruebas distintas verificadas entre las etapas anteriores y esta;
+no se afirma una nueva ejecución de las suites ICC autónomas o de los notebooks.
 
 ```bash
-python ml/features.py
-python -m unittest docs.validar_features_icc docs.validar_semantica docs.validar_relacional -v
+python ml/baseline_ief.py
+python -m unittest docs.validar_ief docs.validar_inflacion docs.validar_semantica docs.validar_relacional -q
 ```
 
-## Splits y referencias experimentales ICC hipotecario
+El baseline conserva todas las columnas y filas de la matriz tratada 0.2 y
+agrega criterios de prioridad mensual, posiciones con intervalos de empate y
+participaciones top 5/top 10. Hay 2.047 filas con prioridad y 353 sin ranking,
+con sus motivos preservados. Los tres primeros meses quedan sin prioridades.
+En los 21 meses con elegibles, las participaciones suman 5 y 10, respectivamente;
+el top 5 cruza un empate en 7 meses y el top 10, en 20.
 
-[ml/baseline.py](../ml/baseline.py) se ejecutó sin red sobre la matriz persistida
-de la misma consolidación. No modifica sus seis features ni el CSV original.
-El hash de la metodología guardada coincide con la consolidación; se verificaron
-la posibilidad de arrastres del BCRA y la distinta población de tasa/stock.
+Se verifican jerarquía lexicográfica, componente positivo del aumento,
+invariancia ante orden de entrada o CUIT de los empatados, independencia de
+meses posteriores, conservación de columnas, filas y exclusiones, detección de
+matrices alteradas y publicación atómica e inmutable. La aplicación no ajusta
+referencias de tratamiento ni parámetros del baseline. Las 342 fuentes y las
+13 tablas consolidadas conservan sus hashes. El código y los dos archivos del
+tratamiento 0.2 permanecen intactos.
 
-- Splits fijos por calendario: 65 meses train (2016-08–2021-12), 24 de validación
-  (2022–2023) y 30 de evaluación retrospectiva (2024–2026-06). Este bloque ya fue
-  inspeccionado: no se presenta como test final intacto. Desde 2026-07 no se
-  puntúa, aunque futuras filas sean elegibles; todavía falta un test no inspeccionado.
-- Tres referencias predefinidas, con percentiles de rango medio ajustados solo
-  sobre train. Pesos por dimensión: 50% crecimiento nominal / 50% tasa UVA;
-  composición y volatilidad permanecen como descriptores sin peso.
-- Las correlaciones señaladas se reproducen. En train, Pearson de crecimientos
-  es 0,9674; en 119 meses es 0,9354. Se guardan diagnósticos de ajuste únicamente
-  de train y sensibilidad de train/validación, sin escoger una variante por test.
-- Extremos 2024-02, 2024-10 y 2024-11 conservados. La fórmula y las tablas fuente
-  coinciden; la causa económica/metodológica no puede determinarse con los
-  agregados y la descripción general disponibles. No se winsorizan ni excluyen.
-- En validación, 18/24 tasas UVA están fuera del rango de train: saturación de
-  ECDF y cambio de distribución documentados, no subsanados recalibrando con test.
-- **45 pruebas aprobadas:** 14 baseline, 17 features, 6 semánticas y 8 relacionales.
-  Incluyen cambios artificiales fuera de train que no alteran referencias ni
-  resultados anteriores, empates, reserva sin puntuar, pesos, controles de PK,
-  fuentes/matrices alteradas, relectura de tipos y reproducción de ambos outputs.
-- Dos ejecuciones reales produjeron el mismo CSV y JSON, con los siguientes hashes:
-  - CSV: `db1288d811f16add11660d14e93065540eb0de6a9412f72ef7e0cc41e419df26`.
-  - JSON: `a20454a5d4ff96ae2e286b0e473fadd3aa5f62d87fdfef61f72524d7309a396f`.
-- Los 332 archivos fuente y la matriz original mantienen sus hashes. Las tablas
-  relacionales, latest y los notebooks no se modificaron. Sintaxis/diagnósticos
-  nuevos sin errores; no se añadieron dependencias.
+El ZIP extraído reproduce los dos archivos del baseline byte a byte y aprueba
+las 42 pruebas IEF. En esa etapa el bosque estaba pendiente; la regla y sus
+limitaciones se documentan en `baseline_ief.md`. La etapa siguiente lo incorpora.
 
-Solo se exportan [icc_hipotecario.csv](../data_analytics/baselines/20261005_011327_837742/icc_hipotecario.csv)
-y [protocolo_icc.json](../data_analytics/baselines/20261005_011327_837742/protocolo_icc.json):
-comparación experimental y artefacto reproducible de splits/referencias para
-futuro entrenamiento. No son un score validado, régimen ni salida web.
+## Bosque IEF 0.1 — entrenamiento y comparación
+
+Se aprobaron 96 pruebas: 14 nuevas del modelo, 42 previas de IEF y 40 de inflación,
+semántica y contrato relacional. El proyecto acumula 263 pruebas distintas
+verificadas entre etapas; no se afirma una nueva ejecución de todas las suites
+ICC autónomas ni de los notebooks anteriores.
 
 ```bash
-python ml/baseline.py
-python -m unittest docs.validar_baseline_icc docs.validar_features_icc docs.validar_semantica docs.validar_relacional -v
+python -m unittest docs.validar_modelo_ief docs.validar_ief docs.validar_inflacion docs.validar_semantica docs.validar_relacional -q
 ```
+
+Se verificó que modificar predictores posteriores al corte no cambia los bytes
+del estimador ni su referencia; las fechas impiden convertir validación en train.
+El artefacto usa 875 filas, 98 empresas, seis predictores, 300 árboles y semilla
+42. Se conservan las 2.400 filas y sus columnas: 2.047 tienen score y 353 quedan
+con score, posición y pesos nulos. La calibración empírica congela los empates
+sobre train y el ranking usa score crudo, incluso cuando el percentil se satura.
+
+El scoring desde el modelo guardado coincide byte a byte con el CSV del
+entrenamiento; las pruebas bloquean cualquier fit al aplicarlo. Se verifican
+hashes y versiones antes de deserializar. Otra corrida completa reproduce los
+cuatro archivos del bundle, incluido joblib, con bytes idénticos. Se verificó
+la misma reproducción desde el ZIP extraído y sus 56 pruebas IEF.
+
+Las semillas 43/44 y la variante de crecimiento original son diagnósticos
+predefinidos, entrenados solo en train; sus modelos no se distribuyen. La
+comparación con baseline usa las mismas filas, medias mensuales y top-k
+fraccional. La composición del top 5 y las correlaciones entre predictores se
+reportan descriptivamente. No se construyó un target ni se afirma anticipación.
+
+Las 342 fuentes, las 13 tablas, el código de preparación y baseline, y sus
+bundles previos conservan sus bytes. El contraste t+1, holdout por grupos,
+fichas, revisión humana y notebook continúan pendientes. Resultados en
+`modelo_ief.md` y en el informe del bundle `bosque_v0.1`.
+
+## Notebooks
+
+Se ejecutaron las celdas de los cuatro notebooks con IPython, en procesos
+locales independientes y con las consultas de red bloqueadas: A, 23 celdas;
+B, 32; C, 20; análisis conjunto, 19. Todas terminaron correctamente.
+Esta verificación ejecuta código y visualizaciones; no utiliza el transporte
+de un servidor Jupyter. Los resultados guardados originales se conservan.
+El notebook A usa visualización Plotly integrada en VS Code/Jupyter en lugar
+de exigir un navegador externo.
+
+## Integridad y reproducción
+
+Las 342 fuentes que declara la consolidación vigente siguen presentes y sus
+hashes SHA256 coinciden. También se comprobaron los archivos de salida que
+declara su metadata. Se conservan los snapshots B y las capturas C requeridos
+por los notebooks y por la procedencia del dataset.
+
+La evaluación empresarial 0.1 se ejecutó con los módulos ML centrales y las
+fuentes compartidas. Sus columnas numéricas coinciden con la entrega anterior
+con tolerancia 1e-10. La comparación de pesos y el cierre 0.2 se recalcularon
+con las rutas compartidas.
+
+Los siete índices vigentes coinciden con los anteriores, con diferencia máxima
+cero en sus puntajes. La limpieza no modifica fórmulas, pesos, cortes,
+referencias, aceptación de modelos ni restricciones de reserva.
+
+## Evidencia de la depuración
+
+`archivos_retirados.csv` registra ruta, tamaño, hash y motivo de cada retiro.
+`verificacion_proyecto.json` contiene el resultado estructurado de las pruebas,
+integridad y comparación de índices. `INFORME_DEPURACION.md`, en la raíz,
+explica qué se conserva y qué se regenera bajo demanda.
+
+## Alcance
+
+Entorno verificado: Python 3.12.14, pandas 2.2.3, numpy 2.3.5, scikit-learn 1.8.0,
+scipy 1.17.0, matplotlib 3.10.8, xlrd 2.0.1 y openpyxl 3.1.5.
+Las dependencias están reunidas en `requirements_icc.txt`.
+La verificación no habilita el global, predicción, causalidad, acceso individual,
+alertas operativas ni integración web. La ejecución en Windows debe usar un
+entorno compatible; no se afirma una ejecución en el equipo del autor.

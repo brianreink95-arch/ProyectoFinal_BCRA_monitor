@@ -1,0 +1,76 @@
+{
+  "version": "pesos_empresariales_0.2_exploratoria",
+  "fecha": "2026-10-15",
+  "formula": "B=100*V*(alpha*C+(1-alpha)*M)",
+  "pesos_costo": [
+    0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1
+  ],
+  "ancla": 0.8,
+  "referencias": "Congelar referencias individuales de train empresarial0.1; no refit",
+  "cambio_autorizado": "Solo ponderacion C/M; preservar volumen, transformaciones, tasa, splits y piloto PH",
+  "episodios": [
+    {
+      "id": "contraccion_2018",
+      "desde": "2017-12-31",
+      "hasta": "2018-12-31",
+      "direccion_esperada": "baja",
+      "alcance": "Contexto general y empresarial, no benchmark hipotecario exacto"
+    },
+    {
+      "id": "recuperacion_2021",
+      "desde": "2020-12-31",
+      "hasta": "2021-12-31",
+      "direccion_esperada": "suba",
+      "alcance": "Compatible con asistencia dirigida; hipoteca especifica no atribuida a LFIP"
+    },
+    {
+      "id": "deterioro_2023",
+      "desde": "2022-12-31",
+      "hasta": "2023-12-31",
+      "direccion_esperada": "baja",
+      "alcance": "Contraccion, demanda menor y terminos mixtos; no valida solo oferta"
+    },
+    {
+      "id": "debilidad_2024_T1",
+      "desde": "2023-12-31",
+      "hasta": "2024-03-31",
+      "direccion_esperada": "baja",
+      "alcance": "ECC demanda baja y estandares estables; refleja contexto, no todos los componentes"
+    },
+    {
+      "id": "giro_2024_T2",
+      "desde": "2024-03-31",
+      "hasta": "2024-06-30",
+      "direccion_esperada": "suba",
+      "alcance": "ECC estandares y demanda mejoran; corte trimestral del research previo"
+    },
+    {
+      "id": "mixto_2026_T2",
+      "desde": "2026-03-31",
+      "hasta": "2026-06-30",
+      "direccion_esperada": "sin_objetivo_unico",
+      "alcance": "Spreads mejoran, plazos/garantias empeoran; no asignar etiqueta binaria"
+    }
+  ],
+  "reglas": [
+    "No elegir por correlacion con el baseline ni reconstruccion de sus inputs.",
+    "No exigir que B replique stock: incorpora costo y dinamica.",
+    "No maximizar un porcentaje de episodios seleccionados ex post.",
+    "Extremos0/1 son controles de ablacion, no candidatos finales si se exigen ambas dimensiones.",
+    "Sin etiquetas validadas de intensidad no calcular RMSE contra valores ICC inventados.",
+    "Reportar coincidencias, desacuerdos y umbrales analiticos de alpha por episodio.",
+    "Simulaciones independientes no son historias economicas plausibles ni evidencia causal.",
+    "Toda comparacion historica es exploratoria: episodios y retrospectiva ya inspeccionados."
+  ],
+  "eleccion_final": "Pendiente de utilidad explicativa y validacion fuera de episodios ya usados; no elegir un ganador automaticamente"
+}

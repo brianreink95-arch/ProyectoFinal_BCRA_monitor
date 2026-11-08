@@ -1,0 +1,5 @@
+# Entorno reproducible verificado con Python 3.12.
+-r requirements.txt
+-r ml/requirements.txt
+-r experimentos/icc/series_v01/requirements.txt
+scipy==1.17.0
