@@ -1,3 +1,0 @@
-# Además de las dependencias principales del proyecto (pandas/numpy).
-# Corrida S1 verificada con scikit-learn 1.8.0; evitar cambios mayores silenciosos.
-scikit-learn>=1.8,<1.9

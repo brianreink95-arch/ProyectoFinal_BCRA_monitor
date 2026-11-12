@@ -1,8 +1,0 @@
-{
-  "pruebas_metodologicas": 10,
-  "resultado": "OK",
-  "archivos_csv_json_comparados": 144,
-  "diferencias": [],
-  "replica": "segunda ejecución independiente sobre mismas fuentes congeladas",
-  "alertas_habilitadas": false
-}

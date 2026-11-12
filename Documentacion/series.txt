@@ -1,0 +1,60 @@
+# Tipo de Titular:
+    # Personas humanas, Prestadores de Servicios Financieros, PyMes, no Pymes
+
+    # Hipotecario / Destino:
+    # Construcción, Refacción, Compra vivienda nueva, Compra vivienda usada, Otras operaciones.
+
+    # Prestamos Generales
+    883, 885, 891, 892,
+    # Hipotecarios por tipo de titular:
+    # ML:
+    927, 929, 935, 936, 
+    # ME: 
+    938, 940, 946, 947,
+    # Hipotecarios por destino:
+    # Personas humanas:
+    # ML:
+    1145, 1146, 1147, 1148, 1149,
+    # ME:
+    1153, 1154, 1155, 1156, 1157,
+    # Personas jurídicas:
+    # ML:
+    1169, 1170, 1171, 1172, 1173,
+    # ME:
+    1177, 1178, 1179, 1180, 1181,
+
+    # Prendarios por tipo de titular:
+    # ML:
+    960, 962, 968, 969,
+    # ME:
+    971, 973, 979, 980,
+    # Prendarios por destino
+    # automotores, maquinarias, otros
+    # Personas humanas - ML
+    1150, 1151, 1152,
+    # Personas humanas - ME
+    1158, 1159, 1160,
+    # Personas jurídicas - ML
+    1174, 1175, 1176,
+    # Personas jurídicas - ME
+    1182, 1183, 1184,
+
+    # Tasas de crédito a personas
+    14,    # Préstamos personales - diaria
+    1215,  # Financiaciones con tarjetas de crédito - mensual
+    1220,  # Tarjetas de crédito con tasa distinta de cero - mensual
+    1218,  # Préstamos prendarios a tasa fija - mensual
+    1240,  # Préstamos hipotecarios UVA - mensual
+
+    # Tasas de crédito a empresas / actividad comercial
+    1199,  # Adelantos en cuenta corriente a tasa fija - mensual
+    1216,  # Documentos a sola firma a tasa fija - mensual
+    145,   # Adelantos en cuenta corriente a empresas privadas, 1-7 días, >=10M - diaria
+
+    # Tasas de referencia / fondeo  
+    7,     # BADLAR bancos privados - diaria
+    135,   # TAMAR bancos públicos y privados - diaria
+    1189,  # Depósitos a plazo fijo en pesos - diaria
+
+    28: "inflacion_interanual",
+    27: "inflacion_mensual",
